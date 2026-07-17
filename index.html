@@ -4231,11 +4231,8 @@ function exportPDF(){
     Object.keys(roleGroups)
       .forEach(role => {
 
-        roleText +=
-  `${role}\n`;
-
-roleText +=
-  `${roleGroups[role].join(", ")}\n\n`;
+        roleText += `(${role})\n`;
+roleText += `${roleGroups[role].join(", ")}\n\n`;
 
       });
 
