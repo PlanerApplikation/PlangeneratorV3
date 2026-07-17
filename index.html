@@ -764,25 +764,25 @@ td:hover .icon-btn {
     <div class="grid-2">
       <div>
         <label>Startdatum</label>
-        <input type="date" id="start">
+        <input type="date" id="start" onchange="save()">
       </div>
 
       <div>
         <label>Enddatum</label>
-        <input type="date" id="end">
+        <input type="date" id="end" onchange="save()">
       </div>
     </div>
 
     <label class="mt">Relevante Wochentage</label>
 
     <div class="days">
-      <label><input type="checkbox" value="1"> Montag</label>
-      <label><input type="checkbox" value="2"> Dienstag</label>
-      <label><input type="checkbox" value="3"> Mittwoch</label>
-      <label><input type="checkbox" value="4"> Donnerstag</label>
-      <label><input type="checkbox" value="5"> Freitag</label>
-      <label><input type="checkbox" value="6"> Samstag</label>
-      <label><input type="checkbox" value="0" checked> Sonntag</label>
+      <label><input type="checkbox" value="1" onchange="save()"> Montag</label>
+<label><input type="checkbox" value="2" onchange="save()"> Dienstag</label>
+<label><input type="checkbox" value="3" onchange="save()"> Mittwoch</label>
+<label><input type="checkbox" value="4" onchange="save()"> Donnerstag</label>
+<label><input type="checkbox" value="5" onchange="save()"> Freitag</label>
+<label><input type="checkbox" value="6" onchange="save()"> Samstag</label>
+<label><input type="checkbox" value="0" checked onchange="save()"> Sonntag</label>
     </div>
   </div>
 </div>
@@ -2654,12 +2654,13 @@ function renderPlans() {
       <b>${p.name}</b><br><br>
 
       <button onclick="openPlan(${i})">Öffnen</button>
-      <button
+<button
   onclick="deletePlan(${i})"
   style="
     background:#fee2e2;
     color:#b91c1c;
     margin-left:10px;
+    box-shadow:none;
   ">
   🗑 Löschen
 </button>
@@ -3405,20 +3406,34 @@ function clearPlan(){
 function persistCurrentPlan(){
   if(!current) return;
 
-  
-
   current.roles = roles;
   current.themes = themes;
   current.rules = rules;
+
+  current.settings = {
+    start: document.getElementById("start").value,
+    end: document.getElementById("end").value,
+    selectedDays: Array.from(
+      document.querySelectorAll(".days input:checked")
+    ).map(cb => parseInt(cb.value))
+  };
 }
 
 
 function loadCurrentPlan(){
 
+
   const settings = current.settings || {};
 
   document.getElementById("start").value = settings.start || "";
   document.getElementById("end").value = settings.end || "";
+  
+  document.getElementById("start").onchange = save;
+document.getElementById("end").onchange = save;
+
+document.querySelectorAll(".days input").forEach(cb => {
+  cb.onchange = save;
+});
 
   const selectedDays = settings.selectedDays || [0];
 
@@ -3546,7 +3561,18 @@ function importConfig(event){
   "Soll die aktuelle Konfiguration wirklich ersetzt werden?\n\nAlle aktuell gespeicherten lokalen Pläne werden überschrieben.",
   "Importieren",
   function(){
-    plans = importedPlans;
+    plans = importedPlans.map(plan => ({
+
+  ...plan,
+
+  settings: {
+    start: "",
+    end: "",
+    selectedDays: [0],
+    ...(plan.settings || {})
+  }
+
+}));
     current = null;
     roles = [];
     rules = [];
@@ -4294,6 +4320,26 @@ roleText +=
 
   });
 
+const startText =
+  new Date(document.getElementById("start").value)
+    .toLocaleDateString("de-DE", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
+
+const endText =
+  new Date(document.getElementById("end").value)
+    .toLocaleDateString("de-DE", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
+
+doc.setProperties({
+  title: `${current.name} (${startText} - ${endText})`
+});
+
   window.open(
     doc.output("bloburl"),
     "_blank"
@@ -4484,6 +4530,13 @@ function showNiceConfirm(title, message, buttonText, onConfirm){
   document.getElementById("niceConfirmTitle").innerText = title;
   document.getElementById("niceConfirmText").innerText = message;
   document.getElementById("niceConfirmButton").innerText = buttonText || "Bestätigen";
+  
+  
+  const btn =
+  document.getElementById("niceConfirmButton");
+
+btn.style.background = "";
+btn.style.color = "";
 
   niceConfirmCallback = onConfirm;
 
@@ -4656,7 +4709,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     <div class="modal-actions">
       <button onclick="closeModal()" class="cancel">Abbrechen</button>
-      <button onclick="confirmDelete()" class="delete">Löschen</button>
+      <button
+  onclick="confirmDelete()"
+  style="
+    background:#fee2e2;
+    color:#b91c1c;
+  ">
+  🗑 Löschen
+</button>
+
     </div>
   </div>
 </div>
