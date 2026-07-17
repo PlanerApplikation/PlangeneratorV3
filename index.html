@@ -1,0 +1,5216 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<title>Plan Generator Pro</title>
+
+<style>
+
+.color-choice{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  cursor:pointer;
+  border:3px solid transparent;
+  transition:.15s;
+}
+
+.color-choice:hover{
+  transform:scale(1.1);
+}
+
+.color-choice.active{
+  border-color:#1e293b;
+  box-shadow:0 0 0 3px rgba(147,197,253,.3);
+}
+
+
+
+
+
+#archiveListModal {
+  z-index: 1000;
+}
+
+#archivePreviewModal {
+  z-index: 1100;
+}
+
+#statsModal {
+  z-index: 1150;
+}
+
+#niceConfirmModal {
+  z-index: 1200;
+}
+
+#niceAlertModal {
+  z-index: 1300;
+}
+
+td, th {
+  vertical-align: middle;
+}
+
+.theme-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.theme-edit {
+  animation: fade .25s ease;
+}
+
+
+/* MODAL */
+.modal {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background: rgba(0,0,0,0.4);
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-box {
+  background:white;
+  padding:25px;
+  border-radius:12px;
+  width:300px;
+  text-align:center;
+
+  animation: slideUp 0.25s cubic-bezier(.25,1,.5,1);
+}
+
+.modal-actions {
+  margin-top:20px;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.modal button {
+  flex:1;
+}
+
+.modal .cancel {
+  background:#ccc;
+  color:black;
+}
+
+.modal .delete {
+  background:#e74c3c;
+}
+
+/* Animation */
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity:0; }
+  to { transform: translateY(0); opacity:1; }
+}
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  color: #1e293b;
+}
+
+/* HEADER */
+.header {
+  background:white;
+  padding:15px 30px;
+  display:flex;
+  justify-content:space-between;
+  border-bottom:1px solid #ddd;
+}
+
+/* CONTAINER */
+.container {
+  padding: 30px;
+  max-width: 900px;
+  margin: auto;
+}
+
+/* CARDS */
+.card {
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  width:300px;
+  margin-top:20px;
+  transition:.25s;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+}
+
+.card:hover { transform: translateY(-5px); }
+
+/* BUTTON */
+button {
+  background:#dbeafe;
+
+  color:#1e40af;
+
+  border:none;
+  padding:10px 16px;
+
+  border-radius:12px;
+
+  font-weight:600;
+
+  cursor:pointer;
+
+  transition:all .2s ease;
+
+  box-shadow:
+    0 4px 10px
+    rgba(59,130,246,.08);
+}
+
+button:hover {
+
+  background:#bfdbfe;
+
+  transform:translateY(-2px);
+
+  box-shadow:
+    0 8px 18px
+    rgba(59,130,246,.15);
+}
+
+button:active {
+  transform:translateY(0);
+}
+
+/* TABS */
+.tabs {
+  display:flex;
+  gap:10px;
+  margin-top:20px;
+}
+
+.tab {
+  background:#e8edf3;
+  padding:10px 15px;
+  border-radius:8px;
+  cursor:pointer;
+  transition:.25s cubic-bezier(.25,1,.5,1);
+}
+
+.tab.active {
+  background:white;
+  box-shadow:0 5px 15px rgba(0,0,0,0.08);
+}
+
+/* CONTENT ANIMATION */
+.content {
+  margin-top:20px;
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  animation:fade .3s;
+}
+@keyframes fade {
+  from{opacity:0; transform:translateY(10px);}
+  to{opacity:1;}
+}
+.fade-in {
+  animation: fade .3s ease;
+}
+.fade-fast {
+  animation: fade .25s ease;
+}
+
+.theme-delete {
+  animation: themeDelete .25s ease forwards;
+}
+
+@keyframes themeDelete {
+  from{
+    opacity:1;
+    transform:translateX(0);
+  }
+
+  to{
+    opacity:0;
+    transform:translateX(20px);
+  }
+}
+
+
+.arrow {
+  display:inline-block;
+  transition:transform .25s ease;
+  margin-right:8px;
+}
+
+.arrow.closed {
+  transform:rotate(-90deg);
+}
+
+
+
+.section-toggle{
+  cursor:pointer;
+  user-select:none;
+}
+
+
+.collapsible {
+
+  max-height: 2000px;
+
+  overflow: hidden;
+
+  transition:
+    max-height 0.35s ease,
+    opacity 0.25s ease;
+
+  opacity: 1;
+
+}
+
+.collapsible.closed {
+
+  max-height: 0;
+
+  opacity: 0;
+
+}
+
+
+.section-toggle:hover{
+  color:#1e40af;
+}
+
+.fade-out {
+  animation: fadeOut .20s ease forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  to {
+    opacity:0;
+    transform:translateY(10px);
+  }
+}
+
+
+
+
+
+.hidden {
+  display: none !important; 
+}
+
+/* INPUT */
+input, select {
+  width: 100%;
+  max-width: 350px;
+  padding:8px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  margin-top:5px;
+}
+
+/* CHIP */
+.chip {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 12px;
+  border-radius:20px;
+  margin:3px;
+  font-size:13px;
+
+  background:#eef2ff;          /* heller Hintergrund */
+  border:1px solid #c7d2fe;    /* leichter Rahmen */
+  color:#1e293b;
+  font-weight:500;
+}
+.chip::before {
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background: currentColor;
+}
+
+
+/* TABLE */
+table { width:100%; border-collapse: collapse;}
+td, th { padding:10px; border-bottom:1px solid #eee;}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+label {
+  font-size: 13px;
+  color: #64748b;
+  display:block;
+  margin-bottom:1px;
+}
+
+/* MODE SWITCH (Woche / Monat / Custom) */
+.mode-switch {
+  display: flex;
+  background: #e8edf3;
+  padding: 5px;
+  border-radius: 10px;
+  width: fit-content;
+}
+
+.mode {
+  border: none;
+  background: transparent;
+  padding: 8px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s;
+  color: #334155;
+}
+
+.mode.active {
+  background: white;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+}
+
+/* INPUT STYLE UPGRADE */
+input, select {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+  
+  font-family: inherit;
+font-size: 15px;
+color: #1e293b;
+}
+
+input:focus {
+  outline: none;
+  border-color: #93c5fd;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(147,197,253,0.3);
+}
+/* SECTIONS (wie Karten) */
+.section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+/* Titel */
+.section h3 {
+  margin: 0;
+  margin-bottom: 5px;
+}
+
+/* Beschreibung */
+.desc {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 15px;
+}
+
+/* 2 Spalten Layout */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+/* Wochentage */
+.days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.days label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #eef2ff;
+  padding: 5px 10px;
+  border-radius: 8px;
+}
+.section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.section h3 {
+  margin: 0;
+  margin-bottom: 5px;
+}
+
+.desc {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 15px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.mt {
+  margin-top: 15px;
+}
+
+.days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.days label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.grid-role {
+  display: grid;
+  grid-template-columns: 2fr 80px auto;
+  gap: 28px;
+  margin-bottom: 10px;
+}
+
+#roleList .chip {
+  margin-right: 8px;
+}
+
+/* ROLE ITEMS */
+.role-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 10px 15px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.role-name {
+  font-weight: 500;
+}
+
+.role-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* badge (1x) */
+.role-badge {
+  background: #f1f5f9;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+/* icons */
+
+.icon-btn {
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 10px;
+}
+
+.icon-btn.delete {
+  color: #e74c3c;
+}
+
+
+
+.people-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+button.primary {
+  background:#dbeafe;
+  color:#1e40af;
+}
+
+.empty-box {
+  margin-top: 20px;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 30px;
+  margin-bottom: 10px;
+}
+
+.person-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+.color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+table {
+  margin-top: 20px;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  text-align: left;
+  font-size: 13px;
+  color: #64748b;
+}
+/* WARNING BOX */
+.warning-box {
+  margin-top: 20px;
+  background: #fff7ed;
+  border: 1px solid #facc15;
+  color: #92400e;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+/* DISABLED BUTTON */
+button.disabled {
+  background: #cbd5f5;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* BIG EMPTY STATE */
+.empty-big {
+  margin-top: 20px;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 60px;
+  text-align: center;
+}
+td .icon-btn {
+  transition: all 0.2s;
+}
+
+td:hover .icon-btn {
+  opacity: 1;
+}
+
+.pdf-btn {
+  background:#dbeafe;
+  color:#1e40af;
+}
+
+.pdf-btn.disabled {
+  background: #cbd5f5;
+  color: #475569;
+  cursor: not-allowed;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="header">
+  <b>📅 Plan Generator Pro</b>
+  <button onclick="showDashboard()">Dashboard</button>
+</div>
+
+<div class="container">
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+
+  <h2>Deine Pläne</h2>
+
+  
+
+  <button onclick="openCreateModal()">+ Neuer Plan</button>
+
+<div id="plans"></div>
+
+<div class="section" style="margin-top:30px;">
+
+  <h3
+    class="section-toggle"
+    onclick="toggleSection(this,'dataManagementContent')">
+
+    <span class="arrow closed">▼</span>
+    Datenverwaltung
+
+  </h3>
+
+  <div
+    id="dataManagementContent"
+    class="collapsible closed">
+
+    <p class="desc">
+      Sichern oder laden Sie alle Pläne, Personen, Rollen,
+      Sperrtermine, Einstellungen und Ergebnisse.
+    </p>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+
+      <button
+        onclick="exportConfig()"
+        style="
+          background:#dcfce7;
+          color:#15803d;
+        ">
+        ⬇️ Konfiguration exportieren
+      </button>
+
+      <button
+        onclick="triggerImport()"
+        style="
+          background:#fef3c7;
+          color:#b45309;
+        ">
+        ⬆️ Konfiguration importieren
+      </button>
+
+      <input
+        type="file"
+        id="importFile"
+        accept="application/json,.json"
+        class="hidden"
+        onchange="importConfig(event)">
+
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<!-- DETAIL -->
+<div id="detail" class="hidden">
+
+<h2 id="planTitle"></h2>
+
+<div class="tabs">
+  <div class="tab active" onclick="tab('settings',this)">Einstellungen</div>
+  <div class="tab" onclick="tab('people',this)">Personen</div>
+  <div class="tab" onclick="tab('rules',this)">Regeln</div>
+  <div class="tab" onclick="tab('result',this)">Ergebnis</div>
+  
+</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="content">
+
+
+  <!-- DATUM -->
+  <div class="section">
+
+  <h3
+  class="section-toggle"
+  onclick="toggleSection(this,'periodContent')">
+
+  <span class="arrow">▼</span>
+  Zeitraum & Wochentage
+
+</h3>
+
+  <div
+  id="periodContent"
+  class="collapsible">
+    <p class="desc">Definieren Sie, wann der Plan gültig ist.</p>
+
+    <div class="grid-2">
+      <div>
+        <label>Startdatum</label>
+        <input type="date" id="start">
+      </div>
+
+      <div>
+        <label>Enddatum</label>
+        <input type="date" id="end">
+      </div>
+    </div>
+
+    <label class="mt">Relevante Wochentage</label>
+
+    <div class="days">
+      <label><input type="checkbox" value="1"> Montag</label>
+      <label><input type="checkbox" value="2"> Dienstag</label>
+      <label><input type="checkbox" value="3"> Mittwoch</label>
+      <label><input type="checkbox" value="4"> Donnerstag</label>
+      <label><input type="checkbox" value="5"> Freitag</label>
+      <label><input type="checkbox" value="6"> Samstag</label>
+      <label><input type="checkbox" value="0" checked> Sonntag</label>
+    </div>
+  </div>
+</div>
+  <!-- ROLLENBEDARF -->
+  <div class="section">
+    <h3
+  class="section-toggle"
+  onclick="toggleSection(this,'rolesContent')">
+
+  <span class="arrow closed">▼</span>
+Rollenbedarf pro Termin
+
+
+</h3>
+
+<div
+  id="rolesContent"
+  class="collapsible closed">
+    <p class="desc">
+      Legen Sie fest, wie viele Personen welcher Rolle pro Termin eingeplant werden sollen.
+    </p>
+
+    <div class="grid-role">
+      <input id="roleName" placeholder="z. B. Leiter, Helfer...">
+      <input type="number" id="roleCount" value="1">
+      <button onclick="addRole()">+ Hinzufügen</button>
+    </div>
+
+    <div id="roleList"></div>
+	
+	</div>
+</div>
+	
+	<div class="section">
+
+  <h3
+  class="section-toggle"
+  onclick="toggleSection(this,'themesContent')">
+
+  <span class="arrow closed">▼</span>
+Themen
+
+</h3>
+
+<div
+  id="themesContent"
+  class="collapsible closed">
+
+  <p class="desc">
+    Hinterlegen Sie häufig verwendete Themen zur späteren Auswahl.
+  </p>
+
+  <div class="grid-role">
+
+  <input
+    id="themeName"
+    placeholder="z. B. Predigt, Sommerfest..."
+  >
+
+  <div></div>
+
+  <div style="display:flex; gap:10px;">
+
+    <button onclick="addTheme()">
+      + Hinzufügen
+    </button>
+
+    <button
+      onclick="clearThemes()"
+      style="
+        background:#fee2e2;
+        color:#b91c1c;
+      ">
+      🗑 Themenliste löschen
+    </button>
+
+  </div>
+
+</div>
+
+<div style="
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+  flex-wrap:wrap;
+">
+
+  <button
+    type="button"
+    onclick="document.getElementById('themeCsvInput').click()"
+    style="
+      background:#fef3c7;
+      color:#b45309;
+    ">
+    ⬆️ CSV importieren
+  </button>
+
+  <button
+    type="button"
+    onclick="exportThemesCSV()"
+    style="
+      background:#dcfce7;
+      color:#15803d;
+    ">
+    ⬇️ CSV exportieren
+  </button>
+
+</div>
+
+
+
+
+<input
+  type="file"
+  id="themeCsvInput"
+  accept=".csv"
+  class="hidden"
+  onchange="importThemesCSV(event)">
+
+<div
+  id="themeList"
+  style="
+    max-height:300px;
+    overflow-y:auto;
+    margin-top:10px;
+  ">
+</div>
+
+</div>
+
+
+  </div>
+</div>
+</div> <!-- SETTINGS ENDE -->
+
+
+<!-- ✅ PEOPLE TAB -->
+<div id="people" class="content hidden">
+
+
+  <!-- HEADER -->
+  <div class="people-header">
+    <div>
+      <h3>Personen & Rollen</h3>
+      <p class="desc">Fügen Sie Personen hinzu, die für diesen Plan verfügbar sind.</p>
+    </div>
+
+    <button class="primary" onclick="addPersonModal()">+ Person hinzufügen</button>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div id="peopleEmpty" class="empty-box">
+    <div class="empty-icon">👤</div>
+    <h4>Keine Personen erfasst</h4>
+    <p>Fügen Sie Personen hinzu, um sie im Dienstplan einteilen zu können.</p>
+
+    <button onclick="addPersonModal()">Person hinzufügen</button>
+  </div>
+
+  <!-- LIST -->
+  <div id="peopleList" class="hidden"></div>
+
+</div>
+<!-- RULES -->
+<div id="rules" class="content hidden">
+
+  <!-- HEADER -->
+  <div class="people-header">
+    <div>
+      <h3>Regeln & Einschränkungen</h3>
+      <p class="desc">Definieren Sie, welche Personen zusammen oder nie zusammen eingeteilt werden sollen.</p>
+    </div>
+
+    <button id="addRuleBtn" class="primary" onclick="openRuleModal()">
+      + Regel hinzufügen
+    </button>
+  </div>
+
+  <!-- HINWEIS -->
+  <div id="rulesWarning" class="warning-box">
+    Sie müssen zuerst mindestens zwei Personen im Reiter "Personen" anlegen, um Regeln definieren zu können.
+  </div>
+
+  <!-- (später Regeln Liste hier) -->
+  <div id="rulesContent" class="hidden"></div>
+
+</div>
+
+
+
+<div id="result" class="content hidden">
+
+  <!-- HEADER -->
+  <div class="people-header">
+  <div>
+    <h3>Fertiger Dienstplan</h3>
+    <p class="desc">Generieren Sie den Plan oder exportieren Sie ihn als PDF.</p>
+  </div>
+
+  <div style="display:flex; gap:10px;">
+    <button
+  style="background:#fee2e2; color:#b91c1c;"
+  onclick="confirmClearPlan()">
+  🗑 Plan leeren
+</button>
+
+<button id="pdfBtn"
+        class="pdf-btn disabled"
+        onclick="exportPDF()">
+  ⬇️ Als PDF exportieren
+</button>
+
+    <button class="primary" onclick="generatePlan()">
+      ✨ Neu generieren
+    </button>
+  </div>
+</div>
+
+  <!-- EMPTY STATE -->
+  <div id="resultEmpty" class="empty-big">
+    <div class="empty-icon">📅</div>
+    <h4>Noch kein Plan generiert</h4>
+    <p>
+      Klicken Sie auf "Plan generieren", um die Personen automatisch anhand ihrer Verfügbarkeiten
+      und Regeln auf die Tage zu verteilen.
+    </p>
+
+    <button class="primary" onclick="generatePlan()">Jetzt generieren</button>
+  </div>
+
+
+
+<div
+  style="
+    margin-top:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+  "
+>
+
+  <button onclick="toggleStats()">
+    📊 Statistik anzeigen
+  </button>
+
+  <div style="display:flex; gap:10px;">
+
+    <button onclick="archiveCurrentPlan()">
+      📦 Plan archivieren
+    </button>
+
+    <button onclick="openArchiveList()">
+      📦 Archiv anzeigen
+    </button>
+
+  </div>
+
+</div>
+
+  <!-- RESULT TABLE -->
+  <div id="resultTable" class="hidden">
+    <table>
+      <thead>
+        <tr>
+  <th style="width:120px;">Datum</th>
+<th style="width:180px;">Thema</th>
+<th style="width:500px;">Eingeteilte Personen</th>
+<th style="width:180px;">Aktionen</th>
+</tr>
+      </thead>
+      <tbody id="table"></tbody>
+    </table>
+  </div>
+</div> <!-- RESULT ENDE -->
+
+</div> <!-- DETAIL ENDE -->
+
+</div> <!-- CONTAINER ENDE -->
+
+<script>
+
+let plans = JSON.parse(localStorage.getItem("plans")||"[]");
+let current = null;
+
+let tempBlockedDates = [];
+let tempBlockedRanges = [];
+let tempPersonRoles = [];
+
+let editIndex = null;
+let editingPersonIndex = null;
+let editingThemeIndex = null;
+let editingThemeListIndex = null;
+
+function openEditModal(i){
+  editIndex = i;
+  const entry = current.result[i];
+
+  document.getElementById("editDate").innerText =
+    new Date(entry.date).toLocaleDateString("de-DE", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric"
+});
+
+  renderEditList();
+  renderEditSelect();
+
+  document.getElementById("editModal").classList.remove("hidden");
+}
+
+function closeEditModal(){
+  document.getElementById("editModal").classList.add("hidden");
+}
+
+function renderEditList(){
+  const div = document.getElementById("editPeopleList");
+  div.innerHTML = "";
+
+  const entry = current.result[editIndex];
+
+  entry.people.forEach((p, idx) => {
+  div.innerHTML += `
+    <div class="role-item">
+      <span>${p.name}${p.role ? " (" + p.role + ")" : ""}</span>
+      <span class="icon-btn delete" onclick="removePersonFromSlot(${idx})">✖</span>
+    </div>
+  `;
+});
+}
+
+function renderEditSelect(){
+  const select = document.getElementById("editSelect");
+  select.innerHTML = "";
+
+  current.people.forEach(p => {
+    select.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+  });
+}
+
+function addPersonToSlot(){
+  const name = document.getElementById("editSelect").value;
+  const entry = current.result[editIndex];
+
+  const alreadyExists = entry.people.some(p => p.name === name);
+  if(alreadyExists) return;
+
+  const person = current.people.find(p => p.name === name);
+
+  let role = "";
+
+  if(person?.role){
+    const roles = person.role
+      .split(",")
+      .map(r => r.trim())
+      .filter(r => r);
+
+    role = roles[Math.floor(Math.random() * roles.length)];
+  }
+
+  entry.people.push({
+    name,
+    role
+  });
+
+  renderEditList();
+  regenerateTable();
+  save();
+}
+
+function toggleStats(){
+
+  renderStats();
+
+  document
+    .getElementById("statsModal")
+    .classList.remove("hidden");
+
+}
+
+function closeStatsModal(){
+
+  const modal =
+    document.getElementById(
+      "statsModal"
+    );
+
+  modal.classList.add("fade-out");
+
+  setTimeout(() => {
+
+    modal.classList.add("hidden");
+    modal.classList.remove("fade-out");
+
+  }, 250);
+
+}
+
+function getUsageInMonth(personName, date){
+
+  const targetMonth =
+    new Date(date).getMonth();
+
+  const targetYear =
+    new Date(date).getFullYear();
+
+  let count = 0;
+
+  const allEntries = [
+    ...(current.history || []),
+    ...(current.result || [])
+  ];
+
+  allEntries
+    .filter(entry => !entry.cancelled)
+    .forEach(entry => {
+
+      const entryDate =
+        new Date(entry.date);
+
+      if(
+        entryDate.getMonth() !== targetMonth ||
+        entryDate.getFullYear() !== targetYear
+      ){
+        return;
+      }
+
+      entry.people.forEach(person => {
+
+        const name =
+          person.name || person;
+
+        if(name === personName){
+          count++;
+        }
+
+      });
+
+    });
+
+  return count;
+}
+
+
+
+function clearThemes(){
+
+  if(themes.length === 0){
+
+    showNiceAlert(
+      "Keine Themen",
+      "Die Themenliste ist bereits leer."
+    );
+
+    return;
+  }
+
+  showNiceConfirm(
+    "Themenliste löschen?",
+    "Möchtest du wirklich alle gespeicherten Themen löschen?",
+    "🗑 Löschen",
+    function(){
+
+      themes = [];
+
+      renderThemes();
+
+      save();
+
+    }
+  );
+
+  const btn =
+    document.getElementById(
+      "niceConfirmButton"
+    );
+
+  btn.style.background =
+    "#fee2e2";
+
+  btn.style.color =
+    "#b91c1c";
+
+}
+
+function exportThemesCSV(){
+
+  if(themes.length === 0){
+
+    showNiceAlert(
+      "Keine Themen",
+      "Es sind keine Themen zum Exportieren vorhanden."
+    );
+
+    return;
+  }
+
+  const csv =
+    themes.join("\n");
+
+  const blob =
+    new Blob(
+      [csv],
+      { type: "text/csv;charset=utf-8;" }
+    );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const a =
+    document.createElement("a");
+
+  a.href = url;
+  a.download = "themen.csv";
+
+  document.body.appendChild(a);
+
+  a.click();
+
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+
+}
+
+
+function addTheme(){
+
+  const name =
+    document.getElementById(
+      "themeName"
+    ).value.trim();
+
+  if(!name){
+
+  showNiceAlert(
+    "Thema fehlt",
+    "Bitte gib zuerst einen Themennamen ein."
+  );
+
+  return;
+}
+
+  themes.push(name);
+
+  document.getElementById(
+    "themeName"
+  ).value = "";
+
+  renderThemes();
+  save();
+  const list =
+  document.getElementById(
+    "themeList"
+  );
+
+list.scrollTo({
+  top: list.scrollHeight,
+  behavior: "smooth"
+});
+}
+
+function importThemesCSV(event){
+
+  const file = event.target.files[0];
+
+  if(!file){
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+
+    const lines =
+      e.target.result
+        .split(/\r?\n/)
+        .map(x => x.trim())
+        .filter(x => x);
+
+    let imported = 0;
+
+    lines.forEach(theme => {
+
+      const exists =
+        themes.some(
+          t => t.toLowerCase() === theme.toLowerCase()
+        );
+
+      if(!exists){
+
+        themes.push(theme);
+
+        imported++;
+
+      }
+
+    });
+
+    renderThemes();
+
+    save();
+
+    showNiceAlert(
+      "Import erfolgreich",
+      `${imported} Themen wurden importiert.`
+    );
+
+  };
+
+  reader.readAsText(file);
+
+  event.target.value = "";
+}
+
+
+function editThemeName(index){
+
+  editingThemeListIndex = index;
+
+  document.getElementById(
+    "customThemeInput"
+  ).value = themes[index];
+  
+  
+  
+  document.querySelector(
+  "#themeChoiceModal button[onclick='openThemeList()']"
+).style.display = "none";
+
+  document
+    .getElementById(
+      "themeChoiceModal"
+    )
+    .classList.remove("hidden");
+
+}
+
+
+
+function deleteTheme(index){
+
+  showNiceConfirm(
+    "Thema löschen?",
+    `Möchtest du das Thema "${themes[index]}" wirklich löschen?`,
+    "🗑 Löschen",
+    function(){
+
+      const item =
+  document.querySelectorAll(
+    "#themeList .role-item"
+  )[index];
+
+item.classList.add(
+  "theme-delete"
+);
+
+setTimeout(() => {
+
+  themes.splice(index,1);
+
+  renderThemes();
+
+  save();
+
+}, 250);
+
+    }
+  );
+
+  const btn =
+    document.getElementById(
+      "niceConfirmButton"
+    );
+
+  btn.style.background =
+    "#fee2e2";
+
+  btn.style.color =
+    "#b91c1c";
+
+}
+
+function renderThemes(){
+
+  const div =
+    document.getElementById(
+      "themeList"
+    );
+
+  if(!div){
+    return;
+  }
+
+  div.innerHTML = "";
+
+  themes.forEach((theme,index)=>{
+
+    div.innerHTML += `
+      <div class="role-item">
+
+        <div class="role-name">
+          ${theme}
+        </div>
+
+        <div class="role-right">
+
+  <span
+    class="icon-btn"
+    onclick="editThemeName(${index})">
+
+    ✏️
+
+  </span>
+
+  <span
+    class="icon-btn"
+    onclick="moveThemeUp(${index})">
+
+    ⬆️
+
+  </span>
+
+  <span
+    class="icon-btn"
+    onclick="moveThemeDown(${index})">
+
+    ⬇️
+
+  </span>
+
+  <span
+    class="icon-btn delete"
+    onclick="deleteTheme(${index})">
+
+    🗑️
+
+  </span>
+
+</div>
+
+      </div>
+    `;
+
+  });
+
+}
+
+function renderStats(){
+
+  const div = document.getElementById("statsContent");
+
+  if(!div || !current){
+    return;
+  }
+
+  const usage = {};
+  const ruleViolations = [];
+
+  current.people.forEach(person => {
+    usage[person.name] = 0;
+  });
+
+  // Historie zählen
+  (current.history || [])
+    .filter(entry => !entry.cancelled)
+    .forEach(entry => {
+
+      entry.people.forEach(person => {
+
+        const name =
+          typeof person === "string"
+            ? person
+            : person.name;
+
+        if(usage[name] !== undefined){
+          usage[name]++;
+        }
+
+      });
+
+    });
+
+  // Aktuellen Plan zählen
+  (current.result || [])
+    .filter(entry => !entry.cancelled)
+    .forEach(entry => {
+
+      entry.people.forEach(person => {
+
+        const name =
+          typeof person === "string"
+            ? person
+            : person.name;
+
+        if(usage[name] !== undefined){
+          usage[name]++;
+        }
+
+      });
+
+    });
+
+  const roleGroups = {};
+
+  current.people.forEach(person => {
+
+    const roles =
+      (person.role || "")
+        .split(",")
+        .map(r => r.trim())
+        .filter(r => r);
+
+    roles.forEach(role => {
+
+      if(!roleGroups[role]){
+        roleGroups[role] = [];
+      }
+
+      roleGroups[role].push({
+        name: person.name,
+        count: usage[person.name] || 0,
+        color: person.color || "#3b82f6"
+      });
+
+    });
+
+  });
+
+
+rules.forEach(rule => {
+
+  current.result.forEach(entry => {
+
+    if(entry.cancelled){
+      return;
+    }
+
+    const names =
+      entry.people.map(p => p.name);
+
+    const hasA =
+      names.includes(rule.a);
+
+    const hasB =
+      names.includes(rule.b);
+
+    if(
+      rule.type === "together"
+      &&
+      (
+        (hasA && !hasB) ||
+        (!hasA && hasB)
+      )
+    ){
+
+      ruleViolations.push(
+        `❌ ${rule.a} und ${rule.b} sollten zusammen eingeplant werden (${new Date(entry.date).toLocaleDateString("de-DE")})`
+      );
+
+    }
+
+    if(
+      rule.type === "separate"
+      &&
+      hasA &&
+      hasB
+    ){
+
+      ruleViolations.push(
+        `❌ ${rule.a} und ${rule.b} wurden gemeinsam eingeplant (${new Date(entry.date).toLocaleDateString("de-DE")})`
+      );
+
+    }
+
+  });
+
+});
+
+
+  let html = "";
+
+  Object.keys(roleGroups)
+    .sort()
+    .forEach(role => {
+
+      roleGroups[role]
+        .sort((a,b) => b.count - a.count);
+
+      const roleValues =
+        roleGroups[role]
+          .map(x => x.count);
+
+      const roleMax =
+        Math.max(...roleValues);
+
+      const roleMin =
+        Math.min(...roleValues);
+
+      html += `
+
+        <div class="section">
+
+          <h3>
+            📌 ${role}
+            (${roleGroups[role].length} Personen)
+          </h3>
+
+          <table>
+
+            <thead>
+              <tr>
+                <th>Person</th>
+                <th>Einsätze</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              ${roleGroups[role]
+                .map(person => `
+
+                  <tr>
+
+                    <td>
+                      <div style="
+                        display:flex;
+                        align-items:center;
+                        gap:10px;
+                      ">
+
+                        <span
+                          class="color-dot"
+                          style="background:${person.color}">
+                        </span>
+
+                        ${person.name}
+
+                      </div>
+                    </td>
+
+                    <td>
+                      <b>${person.count}</b>
+                    </td>
+
+                  </tr>
+
+                `)
+                .join("")}
+
+            </tbody>
+
+          </table>
+
+          <div class="warning-box">
+
+            Fairness-Differenz:
+            ${roleMax - roleMin}
+
+          </div>
+
+        </div>
+
+      `;
+    });
+
+  const values =
+    Object.values(usage);
+
+  const max =
+    values.length
+      ? Math.max(...values)
+      : 0;
+
+  const min =
+    values.length
+      ? Math.min(...values)
+      : 0;
+
+
+
+if(ruleViolations.length === 0){
+
+  html += `
+
+    <div class="section">
+
+      <h3>✅ Regelprüfung</h3>
+
+      <p>
+        Alle definierten Regeln wurden eingehalten.
+      </p>
+
+    </div>
+
+  `;
+
+}
+else{
+
+  html += `
+
+    <div class="section">
+
+      <h3>⚠️ Regelprüfung</h3>
+
+      ${ruleViolations.map(x => `
+        <div style="
+          margin-bottom:8px;
+          color:#b91c1c;
+        ">
+          ${x}
+        </div>
+      `).join("")}
+
+    </div>
+
+  `;
+
+}
+  html += `
+
+    <div class="warning-box">
+
+      <b>Gesamtstatistik</b><br>
+
+      Höchste Einsätze:
+      ${max}<br>
+
+      Niedrigste Einsätze:
+      ${min}<br>
+
+      Differenz:
+      ${max - min}
+
+    </div>
+
+  `;
+
+  div.innerHTML = html;
+}
+
+
+function removePersonFromSlot(idx){
+  const entry = current.result[editIndex];
+  entry.people.splice(idx, 1);
+
+  renderEditList();
+  regenerateTable();
+}
+
+let roles = [];
+
+let themes = [];
+
+let rules = [];
+
+function violatesSeparateRule(selectedPeople, team){
+
+  const selectedNames =
+    selectedPeople.map(p => p.name);
+
+  const teamNames =
+    team.map(p => p.name);
+
+  for(const rule of rules){
+
+    if(rule.type !== "separate"){
+      continue;
+    }
+
+    const personA = rule.a;
+const personB = rule.b;
+
+    const aExists =
+      selectedNames.includes(personA) ||
+      teamNames.includes(personA);
+
+    const bExists =
+      selectedNames.includes(personB) ||
+      teamNames.includes(personB);
+
+    if(aExists && bExists){
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
+function toggleSection(title, id){
+
+  const section =
+    document.getElementById(id);
+
+  section.classList.toggle("closed");
+
+  const arrow =
+    title.querySelector(".arrow");
+
+  arrow.classList.toggle("closed");
+
+}
+
+
+function confirmClearPlan(){
+
+  showNiceConfirm(
+    "Plan leeren?",
+    "Möchtest du den aktuell generierten Plan wirklich löschen?\n\nDieser Vorgang kann nicht rückgängig gemacht werden.",
+    "🗑 Plan leeren",
+    function(){
+
+      clearPlan();
+
+    }
+  );
+
+  const btn =
+    document.getElementById(
+      "niceConfirmButton"
+    );
+
+  btn.style.background =
+    "#fee2e2";
+
+  btn.style.color =
+    "#b91c1c";
+
+}
+
+
+function initColorPicker(selectedColor = "#3b82f6"){
+
+  document
+    .querySelectorAll(".color-choice")
+    .forEach(circle => {
+
+      circle.classList.remove("active");
+
+      if(
+        circle.dataset.color
+        .toLowerCase() ===
+        selectedColor.toLowerCase()
+      ){
+        circle.classList.add("active");
+      }
+
+      circle.onclick = () => {
+
+        document
+          .querySelectorAll(".color-choice")
+          .forEach(c =>
+            c.classList.remove("active")
+          );
+
+        circle.classList.add("active");
+
+        document
+          .getElementById("color")
+          .value =
+            circle.dataset.color;
+
+      };
+
+    });
+
+  document.getElementById("color").value =
+    selectedColor;
+}
+
+
+function moveThemeUp(index){
+
+  if(index === 0){
+    return;
+  }
+
+  [themes[index], themes[index - 1]] =
+  [themes[index - 1], themes[index]];
+
+  renderThemes();
+  save();
+
+}
+
+function moveThemeDown(index){
+
+  if(index >= themes.length - 1){
+    return;
+  }
+
+  [themes[index], themes[index + 1]] =
+  [themes[index + 1], themes[index]];
+
+  renderThemes();
+  save();
+
+}
+
+
+function toggleArchive(){
+
+  const box =
+    document.getElementById(
+      "archiveBox"
+    );
+
+  if(
+    box.classList.contains(
+      "hidden"
+    )
+  ){
+
+    box.classList.remove(
+      "hidden"
+    );
+
+    renderArchives();
+
+  } else {
+
+    box.classList.add(
+      "hidden"
+    );
+
+  }
+
+}
+
+
+function renderArchives(){
+
+  const box =
+    document.getElementById(
+      "archiveListContent"
+    );
+
+  let html = "";
+
+  current.archives
+    .forEach((archive,index) => {
+
+      html += `
+  <div class="section">
+
+    <b>
+  📦 ${archive.name || "Unbenanntes Archiv"}
+</b>
+
+<br>
+
+<span style="
+  font-size:13px;
+  color:#64748b;
+">
+  Archiviert am:
+  ${new Date(
+    archive.archivedAt
+  ).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  })}
+</span>
+
+    <br><br>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+
+      <button
+        onclick="openArchive(${index})">
+        👁 Öffnen
+      </button>
+
+
+      <button
+  onclick="deleteArchive(${index})"
+  style="
+    background:#fee2e2;
+    color:#b91c1c;
+  ">
+  🗑 Löschen
+</button>
+
+    </div>
+
+  </div>
+`;
+
+    });
+
+  box.innerHTML = html;
+}
+
+
+function openBlockedDatesModal(){
+
+  renderBlockedDates();
+  renderBlockedRanges();
+
+  document
+    .getElementById("blockedDatesModal")
+    .classList.remove("hidden");
+
+}
+function closeBlockedDatesModal(){
+
+  const modal =
+    document.getElementById(
+      "blockedDatesModal"
+    );
+
+  modal.classList.add("fade-out");
+
+  setTimeout(() => {
+
+    modal.classList.add("hidden");
+    modal.classList.remove("fade-out");
+
+  }, 250);
+
+}
+
+function renderBlockedRanges(){
+
+  const div =
+    document.getElementById(
+      "blockedRangeList"
+    );
+
+  div.innerHTML = "";
+
+  tempBlockedRanges.forEach(
+    (range,index)=>{
+
+      div.innerHTML += `
+  <span class="chip">
+
+    ${new Date(range.start).toLocaleDateString("de-DE", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    })}
+
+    →
+
+    ${new Date(range.end).toLocaleDateString("de-DE", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    })}
+
+    <span
+      onclick="deleteBlockedRange(${index})"
+      style="cursor:pointer;">
+
+      ✖
+
+    </span>
+
+  </span>
+`;
+
+    }
+  );
+
+}
+
+
+
+function addBlockedRange(){
+
+  const start =
+    document.getElementById(
+      "blockedRangeStart"
+    ).value;
+
+  const end =
+    document.getElementById(
+      "blockedRangeEnd"
+    ).value;
+
+  if(!start || !end){
+    return;
+  }
+
+  tempBlockedRanges.push({
+    start,
+    end
+  });
+
+  renderBlockedRanges();
+
+}
+
+
+function deleteBlockedRange(index){
+
+  const item =
+    document.querySelectorAll(
+      "#blockedRangeList .chip"
+    )[index];
+
+  item.classList.add(
+    "theme-delete"
+  );
+
+  setTimeout(() => {
+
+    tempBlockedRanges.splice(
+      index,
+      1
+    );
+
+    renderBlockedRanges();
+
+  }, 250);
+
+}
+
+function openArchive(index){
+
+  const archive =
+    current.archives[index];
+
+  if(!archive){
+    return;
+  }
+
+  const div =
+    document.getElementById(
+      "archivePreviewContent"
+    );
+
+  let html = "";
+
+const weekday = [
+  "Sonntag",
+  "Montag",
+  "Dienstag",
+  "Mittwoch",
+  "Donnerstag",
+  "Freitag",
+  "Samstag"
+];
+
+archive.result.forEach(entry => {
+
+  const date = new Date(entry.date);
+
+  html += `
+  <div class="section">
+
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:10px;
+    ">
+
+      <div>
+        <b>
+          ${date.toLocaleDateString("de-DE", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+          })}
+        </b>
+        <div style="
+          font-size:13px;
+          color:#64748b;
+        ">
+          ${weekday[date.getDay()]}
+        </div>
+      </div>
+
+      <div style="
+        color:#64748b;
+        font-size:14px;
+      ">
+        🏷️ ${entry.theme || "Kein Thema"}
+      </div>
+
+    </div>
+
+    <div style="
+      border-top:1px solid #e2e8f0;
+      padding-top:12px;
+    ">
+
+      ${
+        entry.cancelled
+        ? `
+          <span style="
+            color:#e74c3c;
+            font-weight:600;
+          ">
+            ❌ Termin fällt aus
+          </span>
+        `
+        : entry.people.map(p => {
+
+            const person =
+              current.people.find(
+                x => x.name === p.name
+              );
+
+            return `
+              <span class="chip"
+                    style="color:${person?.color || '#3b82f6'}">
+
+                <div style="
+                  display:flex;
+                  flex-direction:column;
+                ">
+                  <span>${p.name}</span>
+
+                  ${
+                    p.role
+                    ? `
+                      <span style="
+                        font-size:11px;
+                        opacity:0.6;
+                      ">
+                        ${p.role}
+                      </span>
+                    `
+                    : ""
+                  }
+
+                </div>
+
+              </span>
+            `;
+          }).join("")
+      }
+
+    </div>
+
+  </div>
+  `;
+});
+
+  div.innerHTML = html;
+
+  document
+  .getElementById("loadArchiveBtn")
+  .onclick = function(){
+
+    showNiceConfirm(
+      "Archivierten Plan laden?",
+      "Möchtest du den archivierten Plan wirklich laden?\n\nNicht gespeicherte Änderungen am aktuell geöffneten Plan gehen dabei verloren.",
+      "Plan laden",
+      function(){
+
+        current.result =
+          JSON.parse(
+            JSON.stringify(
+              archive.result
+            )
+          );
+
+        regenerateTable();
+
+        document
+          .getElementById("resultEmpty")
+          .classList.add("hidden");
+
+        document
+          .getElementById("resultTable")
+          .classList.remove("hidden");
+		  
+		  document
+  .getElementById("pdfBtn")
+  .classList.remove("disabled");
+
+        closeArchivePreview();
+
+        showNiceAlert(
+          "Archiv geladen",
+          "Der archivierte Plan wurde erfolgreich geladen."
+        );
+
+      }
+    );
+
+  };
+document
+  .getElementById(
+    "archivePdfBtn"
+  )
+  .onclick = function(){
+
+    exportArchivePDF(
+      archive
+    );
+
+  };
+  closeArchiveList();
+  
+  document
+    .getElementById(
+      "archivePreviewModal"
+    )
+    .classList.remove("hidden");
+}
+
+function closeArchivePreview(){
+
+  document
+    .getElementById(
+      "archivePreviewModal"
+    )
+    .classList.add("hidden");
+
+  openArchiveList();
+
+}
+
+function addBlockedDate(){
+  const val = document.getElementById("blockedDateInput").value;
+  if(!val) return;
+
+  if(!tempBlockedDates.includes(val)){
+    tempBlockedDates.push(val);
+    renderBlockedDates();
+  }
+}
+
+function renderBlockedDates(){
+
+  const div =
+    document.getElementById(
+      "blockedDateList"
+    );
+
+  if(!div){
+    return;
+  }
+
+  div.innerHTML = "";
+
+  tempBlockedDates.forEach((d,i)=>{
+    div.innerHTML += `
+      <span class="chip">
+        ${new Date(d).toLocaleDateString("de-DE", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric"
+})}
+        <span onclick="removeBlockedDate(${i})" style="cursor:pointer;">✖</span>
+      </span>
+    `;
+  });
+}
+
+function removeBlockedDate(i){
+
+  const item =
+    document.querySelectorAll(
+      "#blockedDateList .chip"
+    )[i];
+
+  item.classList.add(
+    "theme-delete"
+  );
+
+  setTimeout(() => {
+
+    tempBlockedDates.splice(i,1);
+
+    renderBlockedDates();
+
+  }, 250);
+
+}
+
+
+
+
+function openRuleModal(){
+  if(!current || current.people.length < 2) return;
+
+  const selectA = document.getElementById("personA");
+  const selectB = document.getElementById("personB");
+
+  selectA.innerHTML = "";
+  selectB.innerHTML = "";
+
+  current.people.forEach((p, i) => {
+    selectA.innerHTML += `<option value="${i}">${p.name}</option>`;
+    selectB.innerHTML += `<option value="${i}">${p.name}</option>`;
+  });
+
+  document.getElementById("ruleModal").classList.remove("hidden");
+}
+
+function closeRuleModal(){
+
+  const modal =
+    document.getElementById(
+      "ruleModal"
+    );
+
+  modal.classList.add("fade-out");
+
+  setTimeout(() => {
+
+    modal.classList.add("hidden");
+    modal.classList.remove("fade-out");
+
+  }, 250);
+
+}
+
+function saveRule(){
+  const type = document.getElementById("ruleType").value;
+  const a = document.getElementById("personA").value;
+  const b = document.getElementById("personB").value;
+
+  if(a === b){
+    showNiceAlert("Hinweis", "Bitte zwei unterschiedliche Personen wählen.");
+    return;
+  }
+
+  const personA =
+  current.people[a].name;
+
+const personB =
+  current.people[b].name;
+
+rules.push({
+  type,
+  a: personA,
+  b: personB
+});
+
+  closeRuleModal();
+  renderRules();
+  save();
+}
+
+
+let deletePersonIndex = null;
+
+function askDeletePerson(index){
+  deletePersonIndex = index;
+  document.getElementById("deletePersonModal").classList.remove("hidden");
+}
+
+function closeDeletePersonModal(){
+  document.getElementById("deletePersonModal").classList.add("hidden");
+}
+
+function confirmDeletePerson(){
+  if(deletePersonIndex === null) return;
+
+  current.people.splice(deletePersonIndex, 1);
+  save();
+  updatePeople();
+
+  closeDeletePersonModal();
+}
+
+function addRole(){
+  const name = document.getElementById("roleName").value;
+  const count = document.getElementById("roleCount").value;
+
+  if(!name) return;
+
+  roles.push({
+    name,
+    count
+  });
+
+  renderRoles();
+
+  document.getElementById("roleName").value = "";
+  save();
+}
+
+function deleteRole(index){
+  roles.splice(index, 1);
+  renderRoles();
+  save();
+}
+
+function renderRoles(){
+  const div = document.getElementById("roleList");
+  div.innerHTML = "";
+
+  roles.forEach((r, index) => {
+    div.innerHTML += `
+      <div class="role-item">
+        
+        <div class="role-name">${r.name}</div>
+
+        <div class="role-right">
+          <span class="role-badge">${r.count}x</span>
+
+          <span class="icon-btn delete" onclick="deleteRole(${index})">🗑️</span>
+        </div>
+
+      </div>
+    `;
+  });
+}
+
+
+let currentMode = "week";
+
+function setMode(mode, el){
+  currentMode = mode;
+
+  document.querySelectorAll(".mode").forEach(b => b.classList.remove("active"));
+  el.classList.add("active");
+
+  const endWrapper = document.getElementById("endWrapper");
+
+  if(mode === "custom"){
+    endWrapper.style.display = "block";
+  } else {
+    endWrapper.style.display = "none";
+  }
+}
+
+
+
+/* DASHBOARD */
+function createPlan() {
+  const name = document.getElementById("planNameInput").value;
+  if (!name) return;
+
+  const plan = {
+  name,
+  people: [],
+  dates: [],
+  result: [],
+  history: [],
+  archives: [],
+  cancelledDates: [],
+  roles: [],
+  themes: [],
+  rules: [],
+  settings: {
+    start: "",
+    end: "",
+    selectedDays: [0],
+    count: 4
+  }
+};
+
+  plans.push(plan);
+  save();
+  renderPlans();
+  
+  closeCreateModal();
+}
+
+function renderPlans() {
+  const div = document.getElementById("plans");
+  div.innerHTML = "";
+
+  plans.forEach((p,i)=>{
+    div.innerHTML += `
+    <div class="card">
+      <b>${p.name}</b><br><br>
+
+      <button onclick="openPlan(${i})">Öffnen</button>
+      <button
+  onclick="deletePlan(${i})"
+  style="
+    background:#fee2e2;
+    color:#b91c1c;
+    margin-left:10px;
+  ">
+  🗑 Löschen
+</button>
+    </div>`;
+  });
+}
+
+
+renderPlans();
+
+/* OPEN */
+function openPlan(i){
+  current = plans[i];
+  document.querySelectorAll(".content")
+  .forEach(c => c.classList.add("hidden"));
+
+document.getElementById("settings")
+  .classList.remove("hidden");
+
+document.querySelectorAll(".tab")
+  .forEach(t => t.classList.remove("active"));
+
+document.querySelector(".tabs .tab")
+  .classList.add("active");
+
+
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("detail").classList.remove("hidden");
+  document.getElementById("planTitle").innerText = current.name;
+
+  updatePeople();
+  loadCurrentPlan();
+}
+
+/* BACK */
+function showDashboard(){
+
+  save();
+
+  document.getElementById("detail")
+    .classList.add("hidden");
+
+  document.getElementById("dashboard")
+    .classList.remove("hidden");
+
+  document.querySelectorAll(".content")
+    .forEach(c => c.classList.add("hidden"));
+
+  document.getElementById("settings")
+    .classList.remove("hidden");
+
+  document.querySelectorAll(".tabs .tab")
+    .forEach(t => t.classList.remove("active"));
+
+  document.querySelector(".tabs .tab")
+    .classList.add("active");
+
+  const dashboard =
+    document.getElementById("dashboard");
+
+  dashboard.classList.remove("fade-in");
+
+  void dashboard.offsetWidth;
+
+  dashboard.classList.add("fade-in");
+}
+
+/* TABS */
+function tab(id, el){
+  document.querySelectorAll('.content').forEach(c=>c.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
+
+  if(id === "rules"){
+    updateRulesUI(); // 🔥 NEU
+  }
+}
+
+/* PEOPLE */
+function addPerson(){
+  const name = document.getElementById("personName").value;
+  const role = document.getElementById("role").value;
+
+  if(!name) return;
+
+  current.people.push({name, role});
+  save();
+  updatePeople();
+}
+
+function updatePeople(){
+  const list = document.getElementById("peopleList");
+  const empty = document.getElementById("peopleEmpty");
+
+  list.innerHTML = "";
+
+  if(current.people.length === 0){
+    empty.classList.remove("hidden");
+    list.classList.add("hidden");
+    return;
+  }
+
+  empty.classList.add("hidden");
+  list.classList.remove("hidden");
+
+  list.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Farbe</th>
+          <th>Name</th>
+          <th>Rolle</th>
+          <th>Ruhetage</th>
+          <th>Max. pro Monat</th>
+          <th>Aktionen</th>
+        </tr>
+      </thead>
+      <tbody id="peopleTable"></tbody>
+    </table>
+  `;
+
+  const tbody = document.getElementById("peopleTable");
+
+  current.people.forEach((p, index)=>{
+  tbody.innerHTML += `
+    <tr>
+      <td>
+        <span class="color-dot" style="background:${p.color}"></span>
+      </td>
+      <td>
+
+  ${p.name}
+
+  ${
+    (p.blockedDates?.length || 0) > 0 ||
+    (p.blockedRanges?.length || 0) > 0
+
+      ? `<span title="Sperrtermine vorhanden">
+           📅
+         </span>`
+
+      : ""
+  }
+
+</td>
+      <td>${p.role || "-"}</td>
+      <td>${p.rest || 0} Tage</td>
+      <td>${p.max || "—"} Einsätze</td>
+      <td>
+        <span class="icon-btn" onclick="editPerson(${index})">✏️</span>
+        <span class="icon-btn delete" onclick="askDeletePerson(${index})">🗑️</span>
+      </td>
+    </tr>
+  `;
+});
+
+}
+
+/* GENERATE */
+function generateDates(){
+  const start = new Date(document.getElementById("start").value);
+  const end = new Date(document.getElementById("end").value);
+
+  const selectedDays = Array.from(document.querySelectorAll(".days input:checked"))
+    .map(e => parseInt(e.value));
+
+  let d = new Date(start);
+  current.dates = [];
+
+  while(d <= end){
+    if(selectedDays.includes(d.getDay())){
+      current.dates.push(new Date(d));
+    }
+    d.setDate(d.getDate() + 1);
+  }
+}
+
+
+function hasEnoughRest(person, date){
+
+  const restDays =
+    parseInt(person.rest || 0);
+
+  if(restDays <= 0){
+    return true;
+  }
+
+  const lastDate =
+    getLastAssignmentDate(person.name);
+
+  if(!lastDate){
+    return true;
+  }
+
+  const diffDays =
+    Math.floor(
+      (new Date(date) - lastDate)
+      / 86400000
+    );
+
+  return diffDays > restDays;
+}
+
+
+function getLastAssignmentDate(personName){
+
+  const entries = [
+
+    ...(current.history || []),
+
+    ...(current.result || [])
+
+  ]
+  .filter(e => !e.cancelled)
+  .filter(e =>
+    e.people.some(p => p.name === personName)
+  );
+
+  if(entries.length === 0){
+    return null;
+  }
+
+  entries.sort(
+    (a,b) =>
+      new Date(b.date) - new Date(a.date)
+  );
+
+  return new Date(entries[0].date);
+}
+
+
+function getUsageCount(){
+
+  const usage = {};
+
+  current.people.forEach(person => {
+    usage[person.name] = 0;
+  });
+
+  (current.history || [])
+    .filter(x => !x.cancelled)
+    .forEach(entry => {
+
+      entry.people.forEach(person => {
+
+        usage[person.name]++;
+
+      });
+
+    });
+
+  return usage;
+}
+
+function generatePlan(){
+
+  generateDates();
+
+  document.getElementById("resultEmpty")
+    .classList.add("hidden");
+
+  document.getElementById("resultTable")
+    .classList.remove("hidden");
+
+
+const oldThemes = {};
+
+(current.result || []).forEach(entry => {
+
+  const dateStr =
+    new Date(entry.date)
+      .toISOString()
+      .split("T")[0];
+
+  oldThemes[dateStr] =
+    entry.theme || "";
+
+});
+
+  current.result = [];
+
+  const usageCount = getUsageCount();
+  current.people.forEach(person => {
+
+  usageCount[person.name] =
+    (usageCount[person.name] || 0)
+    + Math.random();
+
+});
+
+  const warnings = [];
+
+  current.dates.forEach(date => {
+
+  const dateStr =
+  new Date(date)
+    .toISOString()
+    .split("T")[0];
+
+if(
+  current.cancelledDates &&
+  current.cancelledDates.includes(dateStr)
+){
+
+  current.result.push({
+    date,
+    people: [],
+    theme: oldThemes[
+  new Date(date)
+    .toISOString()
+    .split("T")[0]
+] || "",
+    cancelled: true
+  });
+
+  return;
+}
+
+    const rowPeople = [];
+
+    const teams = buildTeams();
+	teams.sort(() => Math.random() - 0.5);
+
+    const remainingRoles = {};
+
+    roles.forEach(role => {
+      remainingRoles[role.name] =
+        parseInt(role.count);
+    });
+
+    let availableTeams = teams.filter(team => {
+
+      for(const person of team){
+
+        const blockedDates =
+          person.blockedDates || [];
+
+        const dateStr =
+          new Date(date)
+            .toISOString()
+            .split("T")[0];
+
+        if(blockedDates.includes(dateStr)){
+          return false;
+        }
+
+        if(!hasEnoughRest(person, date)){
+          return false;
+        }
+
+        if(
+  person.max &&
+  getUsageInMonth(
+    person.name,
+    date
+  ) >= parseInt(person.max)
+){
+  return false;
+}
+      }
+
+      return true;
+    });
+
+    while(true){
+
+      const stillNeeded =
+        Object.values(
+          remainingRoles
+        ).some(x => x > 0);
+
+      if(!stillNeeded){
+        break;
+      }
+
+      let bestTeams = [];
+      let bestScore = -1;
+
+      availableTeams.forEach(team => {
+
+        if(
+          violatesSeparateRule(
+            rowPeople,
+            team
+          )
+        ){
+          return;
+        }
+
+        const teamRoles =
+          getTeamRoles(team);
+
+        let roleScore = 0;
+
+        Object.keys(teamRoles)
+          .forEach(role => {
+
+          if(
+            remainingRoles[role] > 0
+          ){
+
+            roleScore += Math.min(
+              remainingRoles[role],
+              teamRoles[role]
+            );
+          }
+        });
+
+        if(roleScore === 0){
+          return;
+        }
+
+let usageScore = 0;
+
+team.forEach(person => {
+
+  usageScore +=
+    usageCount[
+      person.name
+    ] || 0;
+
+});
+
+const finalScore =
+  roleScore * 1000
+  - (usageScore * 25);
+
+
+        if(finalScore > bestScore){
+
+          bestScore = finalScore;
+          bestTeams = [team];
+
+        }
+        else if(
+          finalScore === bestScore
+        ){
+
+          bestTeams.push(team);
+
+        }
+
+      });
+
+      if(bestTeams.length === 0){
+        break;
+      }
+
+const selectedTeam =
+  bestTeams[
+    Math.floor(
+      Math.random() *
+      bestTeams.length
+    )
+  ];
+
+      selectedTeam.forEach(person => {
+
+        if(
+          rowPeople.some(
+            p => p.name === person.name
+          )
+        ){
+          return;
+        }
+
+        const rolesOfPerson =
+          (person.role || "")
+            .split(",")
+            .map(r => r.trim())
+            .filter(r => r);
+
+        let assignedRole = "";
+
+        for(const role of rolesOfPerson){
+
+          if(
+            remainingRoles[role] > 0
+          ){
+
+            assignedRole = role;
+
+            remainingRoles[role]--;
+
+            break;
+          }
+        }
+
+        if(!assignedRole){
+          assignedRole =
+            rolesOfPerson[0] || "";
+        }
+
+        rowPeople.push({
+          name: person.name,
+          role: assignedRole
+        });
+
+        usageCount[
+          person.name
+        ] =
+          (usageCount[
+            person.name
+          ] || 0) + 1;
+
+      });
+
+      availableTeams =
+        availableTeams.filter(
+          team =>
+            team !== selectedTeam
+        );
+    }
+
+    Object.keys(
+      remainingRoles
+    ).forEach(role => {
+
+      if(
+        remainingRoles[role] > 0
+      ){
+
+        warnings.push(
+  `📅 ${new Date(date)
+    .toLocaleDateString("de-DE", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    })}
+
+⚠️ ${remainingRoles[role]}x ${role} konnte nicht besetzt werden`
+);
+
+      }
+    });
+rowPeople.sort((a, b) => {
+
+  const roleOrder = {};
+
+  roles.forEach((role, index) => {
+    roleOrder[role.name] = index;
+  });
+
+  return (
+    (roleOrder[a.role] ?? 999) -
+    (roleOrder[b.role] ?? 999)
+  );
+
+});
+    current.result.push({
+      date,
+      people: rowPeople,
+      theme: oldThemes[dateStr] || "",
+      cancelled: false
+    });
+
+  });
+current.result.sort(
+  (a,b) =>
+    new Date(a.date) -
+    new Date(b.date)
+);
+
+  regenerateTable();
+
+  document
+    .getElementById("pdfBtn")
+    .classList.remove("disabled");
+
+  save();
+
+  if(warnings.length){
+
+    showNiceAlert(
+      "Plan teilweise unvollständig",
+      warnings.join("\n\n")
+    );
+
+  }
+
+}
+
+  function dateString(date){
+    return new Date(date)
+      .toISOString()
+      .split("T")[0];
+  }
+
+  function isBlocked(person, date){
+
+    const blocked =
+      person.blockedDates || [];
+
+    return blocked.includes(
+      dateString(date)
+    );
+  }
+
+  function hasReachedMax(person){
+
+    if(
+      person.max === undefined ||
+      person.max === null ||
+      person.max === ""
+    ){
+      return false;
+    }
+
+    return (
+      usageCount[person.name] >=
+      parseInt(person.max)
+    );
+  }
+
+  function getPerson(name){
+    return current.people.find(
+      p => p.name === name
+    );
+  }
+
+
+
+function buildTeams(){
+
+  const visited = new Set();
+  const teams = [];
+
+  current.people.forEach(person => {
+
+    if(visited.has(person.name)){
+      return;
+    }
+
+    const partnerName =
+      getTogetherPartner(person.name);
+
+    if(partnerName){
+
+      const partner =
+        current.people.find(
+          p => p.name === partnerName
+        );
+
+      if(partner){
+
+        teams.push([
+          person,
+          partner
+        ]);
+
+        visited.add(person.name);
+        visited.add(partner.name);
+
+        return;
+      }
+    }
+
+    teams.push([person]);
+
+    visited.add(person.name);
+
+  });
+
+  return teams;
+}
+
+
+function getTeamRoles(team){
+
+  const teamRoles = {};
+
+  team.forEach(person => {
+
+    const roles =
+      (person.role || "")
+      .split(",")
+      .map(r => r.trim())
+      .filter(r => r);
+
+    roles.forEach(role => {
+
+      teamRoles[role] =
+        (teamRoles[role] || 0) + 1;
+
+    });
+
+  });
+
+  return teamRoles;
+}
+
+
+function getTogetherPartner(personName){
+
+  for(const rule of rules){
+
+    if(rule.type !== "together") continue;
+
+    const personA = rule.a;
+const personB = rule.b;
+
+    if(personName === personA) return personB;
+    if(personName === personB) return personA;
+  }
+
+  return null;
+}
+
+
+function clearPlan(){
+
+  current.result = [];
+
+  document.getElementById("table").innerHTML = "";
+
+  document
+    .getElementById("pdfBtn")
+    .classList.add("disabled");
+
+  const empty =
+    document.getElementById("resultEmpty");
+
+  document
+    .getElementById("resultTable")
+    .classList.add("hidden");
+
+  empty.classList.remove("hidden");
+
+  empty.classList.remove("fade-fast");
+
+  void empty.offsetWidth;
+
+  empty.classList.add("fade-fast");
+
+  save();
+
+}
+
+
+
+function persistCurrentPlan(){
+  if(!current) return;
+
+  
+
+  current.roles = roles;
+  current.themes = themes;
+  current.rules = rules;
+}
+
+
+function loadCurrentPlan(){
+
+  const settings = current.settings || {};
+
+  document.getElementById("start").value = settings.start || "";
+  document.getElementById("end").value = settings.end || "";
+
+  const selectedDays = settings.selectedDays || [0];
+
+  document.querySelectorAll(".days input").forEach(cb => {
+    cb.checked = selectedDays.includes(parseInt(cb.value));
+  });
+
+  roles = current.roles || [];
+  themes = current.themes || [];
+  rules = current.rules || [];
+current.cancelledDates =
+  current.cancelledDates || [];
+  
+  current.archives =
+  current.archives || [];
+  
+  renderRoles();
+  renderThemes();
+  updateRulesUI();
+
+  if(current.result && current.result.length > 0){
+    document.getElementById("resultEmpty").classList.add("hidden");
+    document.getElementById("resultTable").classList.remove("hidden");
+    document.getElementById("pdfBtn").classList.remove("disabled");
+    regenerateTable();
+  } else {
+    document.getElementById("resultEmpty").classList.remove("hidden");
+    document.getElementById("resultTable").classList.add("hidden");
+    document.getElementById("pdfBtn").classList.add("disabled");
+  }
+}
+
+/* SAVE */
+function save(){
+  persistCurrentPlan();
+  localStorage.setItem("plans", JSON.stringify(plans));
+}
+
+function archiveCurrentPlan(){
+
+  if(
+    !current ||
+    !current.result ||
+    current.result.length === 0
+  ){
+    return;
+  }
+
+  document
+    .getElementById("archiveNameInput")
+    .value = current.name;
+
+  document
+    .getElementById("archiveNameModal")
+    .classList.remove("hidden");
+}
+
+
+
+function exportConfig(){
+  // Falls gerade ein Plan geöffnet ist, vorher alles speichern
+  save();
+
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    plans: plans
+  };
+
+  const json = JSON.stringify(data, null, 2);
+
+  const blob = new Blob([json], {
+    type: "application/json"
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+
+  const date = new Date().toISOString().split("T")[0];
+  a.download = `plan-generator-backup-${date}.json`;
+
+  document.body.appendChild(a);
+  a.click();
+
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function triggerImport(){
+  document.getElementById("importFile").click();
+}
+
+function importConfig(event){
+  const file = event.target.files[0];
+
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+    try {
+      const importedData = JSON.parse(e.target.result);
+
+      let importedPlans = [];
+
+      // Neues Backup-Format
+      if(importedData.plans && Array.isArray(importedData.plans)){
+        importedPlans = importedData.plans;
+      }
+
+      // Falls direkt nur ein Array importiert wird
+      else if(Array.isArray(importedData)){
+        importedPlans = importedData;
+      }
+
+      else {
+        showNiceAlert("Ungültige Datei", "Die Datei hat kein gültiges Konfigurationsformat.");
+        return;
+      }
+
+      showNiceConfirm(
+  "Konfiguration importieren?",
+  "Soll die aktuelle Konfiguration wirklich ersetzt werden?\n\nAlle aktuell gespeicherten lokalen Pläne werden überschrieben.",
+  "Importieren",
+  function(){
+    plans = importedPlans;
+    current = null;
+    roles = [];
+    rules = [];
+
+    localStorage.setItem("plans", JSON.stringify(plans));
+
+    renderPlans();
+
+    document.getElementById("detail").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+
+    showNiceAlert("Erfolgreich importiert", "Die Konfiguration wurde erfolgreich importiert.");
+  }
+);
+
+event.target.value = "";
+
+    } catch(error){
+      showNiceAlert(
+  "Fehler beim Import",
+  "Die Datei konnte nicht gelesen werden.\nBitte wählen Sie eine gültige JSON-Datei aus."
+);
+      console.error(error);
+    }
+
+    // Damit dieselbe Datei später nochmal importiert werden kann
+    event.target.value = "";
+  };
+
+  reader.readAsText(file);
+}
+
+let deleteIndex = null;
+
+function deletePlan(index){
+  deleteIndex = index;
+  document.getElementById("confirmModal").classList.remove("hidden");
+}
+
+function closeModal(){
+  document.getElementById("confirmModal").classList.add("hidden");
+}
+
+function confirmDelete(){
+  if(deleteIndex === null) return;
+
+  plans.splice(deleteIndex, 1);
+
+  save();
+  renderPlans();
+  closeModal();
+}
+function openCreateModal(){
+  document.getElementById("createModal").classList.remove("hidden");
+}
+
+function closeCreateModal(){
+  document.getElementById("createModal").classList.add("hidden");
+  document.getElementById("planNameInput").value = "";
+}
+
+
+function toggleCancel(index){
+
+  const entry = current.result[index];
+
+  const dateStr =
+    new Date(entry.date)
+      .toISOString()
+      .split("T")[0];
+
+  current.cancelledDates =
+    current.cancelledDates || [];
+
+  if(entry.cancelled){
+
+    current.cancelledDates =
+      current.cancelledDates.filter(
+        d => d !== dateStr
+      );
+
+  } else {
+
+    if(
+      !current.cancelledDates.includes(dateStr)
+    ){
+      current.cancelledDates.push(dateStr);
+    }
+  }
+
+  generatePlan();
+
+  save();
+}
+
+
+
+
+
+
+
+function addPersonModal(){
+editingPersonIndex = null;
+  tempPersonRoles = [];
+  renderTempPersonRoles();
+
+  tempBlockedDates = [];
+  renderBlockedDates();
+  
+  
+  document.getElementById(
+  "personModalTitle"
+).innerText =
+  "Neue Person hinzufügen";
+
+document.getElementById(
+  "personModalDescription"
+).innerText =
+  "Erfassen Sie die Verfügbarkeiten und die Rolle der Person.";
+
+
+  document.getElementById("newPersonName").value = "";
+  document.getElementById("newRoleInput").value = "";
+  document.getElementById("restDays").value = 0;
+  document.getElementById("maxUses").value = "";
+  initColorPicker("#3b82f6");
+  document
+  
+  
+  document.getElementById("personModal").classList.remove("hidden");
+}
+
+function closePersonModal(){
+
+  const modal =
+    document.getElementById(
+      "personModal"
+    );
+
+  modal.classList.add("fade-out");
+
+  setTimeout(() => {
+
+    modal.classList.add("hidden");
+    modal.classList.remove("fade-out");
+
+  }, 250);
+
+}
+
+
+function savePerson(){
+  const name = document.getElementById("newPersonName").value;
+  const role = tempPersonRoles.join(", ");
+
+  if(!name) return;
+
+  const personData = {
+  name,
+  role,
+  rest: document.getElementById("restDays").value,
+  max: document.getElementById("maxUses").value,
+  color: document.getElementById("color").value,
+  blockedDates: [...tempBlockedDates],
+blockedRanges: [...tempBlockedRanges]
+};
+
+if(editingPersonIndex !== null){
+
+  current.people[editingPersonIndex] = personData;
+
+  editingPersonIndex = null;
+
+} else {
+
+  current.people.push(personData);
+
+}
+
+  save();
+  updatePeople();
+  closePersonModal();
+  tempBlockedDates = [];
+renderBlockedDates();
+
+
+  // Reset
+  document.getElementById("newPersonName").value = "";
+  document.getElementById("newRoleInput").value = "";
+tempPersonRoles = [];
+renderTempPersonRoles();
+}
+
+function editPerson(index){
+document.getElementById(
+  "personModalTitle"
+).innerText =
+  "Person bearbeiten";
+
+document.getElementById(
+  "personModalDescription"
+).innerText =
+  "Bearbeiten Sie die Person, Rollen und Verfügbarkeiten.";
+
+document.getElementById(
+  "personSaveBtn"
+).innerText =
+  "Speichern"; 
+  
+  const p = current.people[index];
+
+  document.getElementById("newPersonName").value = p.name;
+
+  tempPersonRoles = (p.role || "")
+    .split(",")
+    .map(r => r.trim())
+    .filter(r => r);
+
+  renderTempPersonRoles();
+
+  tempBlockedDates = p.blockedDates ? [...p.blockedDates] : [];
+  tempBlockedRanges =
+  p.blockedRanges
+  ? [...p.blockedRanges]
+  : [];
+  renderBlockedDates();
+
+  document.getElementById("newRoleInput").value = "";
+  document.getElementById("restDays").value = p.rest || 0;
+  document.getElementById("maxUses").value = p.max || "";
+  initColorPicker(
+  p.color || "#3b82f6"
+);
+
+editingPersonIndex = index;
+document
+  
+
+  document.getElementById("personModal").classList.remove("hidden");
+}
+
+
+function updateRulesUI(){
+  const btn = document.getElementById("addRuleBtn");
+  const warning = document.getElementById("rulesWarning");
+
+  if(!current || current.people.length < 2){
+    btn.classList.add("disabled");
+    warning.classList.remove("hidden");
+  } else {
+    btn.classList.remove("disabled");
+    warning.classList.add("hidden");
+  }
+  
+  renderRules();
+}
+
+function renderRules(){
+  const div = document.getElementById("rulesContent");
+
+  if(rules.length === 0){
+    div.innerHTML = "";
+    return;
+  }
+
+  div.classList.remove("hidden");
+  div.innerHTML = "";
+
+  rules.forEach((r, index)=>{
+    const pA = r.a || "-";
+const pB = r.b || "-";
+
+    const text = r.type === "together"
+      ? "immer zusammen"
+      : "nie zusammen";
+
+    div.innerHTML += `
+      <div class="role-item">
+        <div><b>${pA}</b> &amp; <b>${pB}</b> → ${text}</div>
+        <span class="icon-btn delete" onclick="deleteRule(${index})">🗑️</span>
+      </div>
+    `;
+  });
+}
+
+function deleteRule(index){
+  rules.splice(index, 1);
+  renderRules();
+  save();
+}
+
+
+function deleteArchive(index){
+
+  showNiceConfirm(
+    "Archiv löschen?",
+    "Der Archiv-Eintrag wird dauerhaft gelöscht.",
+    "Löschen",
+    function(){
+
+      current.archives.splice(
+        index,
+        1
+      );
+
+      save();
+
+      renderArchives();
+
+      
+     
+
+    }
+  );
+
+}
+
+
+function regenerateTable(){
+  const tbody = document.getElementById("table");
+  tbody.innerHTML = "";
+
+  const weekday = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+
+  current.result.forEach((entry, i) => {
+    tbody.innerHTML += `
+      <tr>
+        <td>
+  ${new Date(entry.date).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  })}
+  <br>
+  <span style="
+    color:#94a3b8;
+    font-size:12px;
+    font-style:italic;
+  ">
+    (${weekday[new Date(entry.date).getDay()]})
+  </span>
+</td>
+        <td style="cursor:pointer;">
+  <div class="theme-cell">
+    <span id="theme-${i}" onclick="editTheme(${i})" style="color:#64748b;">
+      ${entry.theme || "Thema hinzufügen"}
+    </span>
+
+    <span onclick="editTheme(${i})" 
+          class="icon-btn" 
+          style="opacity:0.6;">
+      ✏️
+    </span>
+  </div>
+</td>
+<td>
+  ${
+    entry.cancelled
+    ? `<span style="color:#e74c3c; font-weight:500;">❌ Termin fällt aus</span>`
+    : entry.people.map(p => {
+        const person = current.people.find(x => x.name === p.name);
+        return `<span class="chip" style="color:${person?.color || '#3b82f6'}">
+  <div style="display:flex; flex-direction:column;">
+    <span>${p.name}</span>
+${p.role ? `<span style="font-size:11px; opacity:0.6;">${p.role}</span>` : ""}
+  </div>
+</span>`;
+      }).join("")
+  }
+</td>
+
+        <td>
+  <span class="icon-btn" onclick="openEditModal(${i})">✏️</span>
+
+  <span class="icon-btn"
+        onclick="toggleCancel(${i})"
+        style="color:${entry.cancelled ? '#16a34a' : '#e74c3c'}">
+
+    ${entry.cancelled ? "✅ Aktivieren" : "🚫 Ausfallen"}
+
+  </span>
+</td>
+      </tr>
+    `;
+  });
+  const table =
+  document.getElementById("resultTable");
+
+table.classList.remove("fade-fast");
+
+void table.offsetWidth;
+
+table.classList.add("fade-fast");
+}
+
+function editTheme(index){
+
+  editingThemeIndex = index;
+
+  document.getElementById(
+    "customThemeInput"
+  ).value =
+    current.result[index].theme || "";
+	
+	document.querySelector(
+  "#themeChoiceModal button[onclick='openThemeList()']"
+).style.display = "";
+
+  document
+    .getElementById("themeChoiceModal")
+    .classList.remove("hidden");
+
+}
+function openCustomTheme(){
+
+  const index = editingThemeIndex;
+
+  document
+    .getElementById("themeChoiceModal")
+    .classList.add("hidden");
+
+  const currentTheme =
+    current.result[index].theme || "";
+
+  const td =
+    document.getElementById(
+      "theme-" + index
+    ).parentElement;
+
+  td.innerHTML = `
+
+    <input id="theme-input-${index}"
+           value="${currentTheme}"
+           placeholder="Thema eingeben..."
+           style="padding:6px; width:220px;">
+
+    <span onclick="saveTheme(${index})"
+          style="cursor:pointer; margin-left:5px;">
+      ✅
+    </span>
+
+    <span onclick="cancelTheme(${index})"
+          style="cursor:pointer; margin-left:5px;">
+      ❌
+    </span>
+
+  `;
+}
+
+function openThemeList(){
+
+  const div =
+    document.getElementById(
+      "themeListSelection"
+    );
+
+  div.innerHTML = "";
+
+  themes.forEach(theme => {
+
+    div.innerHTML += `
+
+      <div
+        class="role-item"
+        onclick="selectTheme('${theme.replace(/'/g, "\\'")}')"
+        style="cursor:pointer;">
+
+        <div class="role-name">
+          ${theme}
+        </div>
+
+      </div>
+
+    `;
+
+  });
+
+  document
+    .getElementById("themeListModal")
+    .classList.remove("hidden");
+
+}
+function closeThemeList(){
+
+  document
+    .getElementById("themeListModal")
+    .classList.add("hidden");
+
+}
+
+function selectTheme(theme){
+
+  current.result[
+    editingThemeIndex
+  ].theme = theme;
+
+  closeThemeList();
+
+  document
+    .getElementById("themeChoiceModal")
+    .classList.add("hidden");
+
+  save();
+
+  regenerateTable();
+
+}
+
+function saveTheme(index){
+
+  const input =
+    document.getElementById(
+      "theme-input-" + index
+    );
+
+  current.result[index].theme =
+    input.value;
+
+  editingThemeIndex = null;
+
+  save();
+
+  regenerateTable();
+
+}
+
+
+function cancelTheme(index){
+  regenerateTable();
+}
+
+function handleThemeKey(e, index){
+  if(e.key === "Enter"){
+    saveTheme(index);
+  }
+  if(e.key === "Escape"){
+    cancelTheme(index);
+  }
+}
+function exportPDF(){
+
+  if(!current || !current.result || current.result.length === 0){
+    showNiceAlert(
+      "Hinweis",
+      "Bitte zuerst einen Plan generieren."
+    );
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+
+  const doc = new jsPDF({
+    orientation: "landscape"
+  });
+
+  const weekday = [
+    "Sonntag",
+    "Montag",
+    "Dienstag",
+    "Mittwoch",
+    "Donnerstag",
+    "Freitag",
+    "Samstag"
+  ];
+
+  const start =
+    document.getElementById("start").value;
+
+  const end =
+    document.getElementById("end").value;
+
+  doc.setFontSize(18);
+  doc.setFont(undefined, "bold");
+
+  doc.text(
+    current.name || "Dienstplan",
+    14,
+    15
+  );
+
+  doc.setFont(undefined, "normal");
+
+  if(start && end){
+
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+
+    doc.text(
+      `${
+        new Date(start).toLocaleDateString(
+          "de-DE",
+          {
+            day:"2-digit",
+            month:"2-digit",
+            year:"numeric"
+          }
+        )
+      } bis ${
+        new Date(end).toLocaleDateString(
+          "de-DE",
+          {
+            day:"2-digit",
+            month:"2-digit",
+            year:"numeric"
+          }
+        )
+      }`,
+      14,
+      22
+    );
+  }
+
+  const rows = current.result.map(entry => {
+
+    const date =
+      new Date(entry.date);
+
+    const dateText =
+      `${date.toLocaleDateString(
+        "de-DE",
+        {
+          day:"2-digit",
+          month:"2-digit",
+          year:"numeric"
+        }
+      )}\n(${weekday[date.getDay()]})`;
+
+    if(entry.cancelled){
+
+      return [
+        dateText,
+        entry.theme || "",
+        "TERMIN FÄLLT AUS"
+      ];
+    }
+
+    const roleGroups = {};
+
+    entry.people.forEach(person => {
+
+      const role =
+        person.role || "Ohne Rolle";
+
+      if(!roleGroups[role]){
+        roleGroups[role] = [];
+      }
+
+      roleGroups[role].push(
+        person.name
+      );
+
+    });
+
+    let roleText = "";
+
+    Object.keys(roleGroups)
+      .forEach(role => {
+
+        roleText +=
+  `${role}\n`;
+
+roleText +=
+  `${roleGroups[role].join(", ")}\n\n`;
+
+      });
+
+    return [
+      dateText,
+      entry.theme || "-",
+      roleText.trim()
+    ];
+
+  });
+
+  doc.autoTable({
+
+    startY: 30,
+
+    head: [[
+      "Datum",
+      "Thema",
+      "Besetzung"
+    ]],
+
+    body: rows,
+
+    theme: "grid",
+
+    headStyles: {
+      fillColor: [59,109,246],
+      textColor: 255,
+      fontSize: 11,
+      fontStyle: "bold"
+    },
+
+    alternateRowStyles: {
+      fillColor: [248,250,252]
+    },
+
+    styles: {
+  fontSize: 9,
+  cellPadding: {
+    top: 2,
+    right: 4,
+    bottom: 2,
+    left: 4
+  },
+  overflow: "linebreak",
+  valign: "middle"
+},
+
+    columnStyles: {
+      0: {
+        cellWidth: 50
+      },
+      1: {
+        cellWidth: 60
+      },
+      2: {
+        cellWidth: 160
+      }
+    },
+
+    didParseCell: function(data){
+
+      const row =
+        current.result[
+          data.row.index
+        ];
+
+      if(
+        data.section === "body" &&
+        row?.cancelled
+      ){
+
+        data.cell.styles.fillColor =
+          [254,226,226];
+
+        data.cell.styles.textColor =
+          [185,28,28];
+
+      }
+
+    }
+
+  });
+
+  window.open(
+    doc.output("bloburl"),
+    "_blank"
+  );
+}
+
+function addTempPersonRole(){
+  const input = document.getElementById("newRoleInput");
+  const role = input.value.trim();
+
+  if(!role) return;
+
+  const exists = tempPersonRoles.some(r =>
+    r.toLowerCase() === role.toLowerCase()
+  );
+
+  if(!exists){
+    tempPersonRoles.push(role);
+    renderTempPersonRoles();
+  }
+
+  input.value = "";
+  input.focus();
+}
+
+
+function closeArchiveNameModal(){
+
+  const modal =
+    document.getElementById(
+      "archiveNameModal"
+    );
+
+  modal.classList.add("fade-out");
+
+  setTimeout(() => {
+
+    modal.classList.add("hidden");
+    modal.classList.remove("fade-out");
+
+  }, 250);
+
+}
+
+
+function saveCustomTheme(){
+if(editingThemeListIndex !== null){
+
+  themes[editingThemeListIndex] =
+    document.getElementById(
+      "customThemeInput"
+    ).value.trim();
+
+  editingThemeListIndex = null;
+  editingThemeIndex = null;
+
+  renderThemes();
+
+  save();
+
+  document
+    .getElementById(
+      "themeChoiceModal"
+    )
+    .classList.add("hidden");
+
+  return;
+}
+  const value =
+    document.getElementById(
+      "customThemeInput"
+    ).value.trim();
+
+  current.result[
+    editingThemeIndex
+  ].theme = value;
+
+  document
+    .getElementById("themeChoiceModal")
+    .classList.add("hidden");
+
+  save();
+
+  regenerateTable();
+
+}
+
+
+function confirmArchiveName(){
+
+  const archiveName =
+    document
+      .getElementById("archiveNameInput")
+      .value
+      .trim();
+
+  if(!archiveName){
+    showNiceAlert(
+      "Hinweis",
+      "Bitte einen Namen eingeben."
+    );
+    return;
+  }
+
+  current.archives =
+    current.archives || [];
+
+  current.archives.push({
+
+    name: archiveName,
+
+    archivedAt:
+      new Date().toISOString(),
+
+    result:
+      JSON.parse(
+        JSON.stringify(
+          current.result
+        )
+      )
+
+  });
+
+  save();
+
+  closeArchiveNameModal();
+
+  showNiceAlert(
+    "Plan archiviert",
+    "Der Plan wurde erfolgreich archiviert."
+  );
+}
+
+
+function closeThemeModal(){
+
+  const modal =
+    document.getElementById(
+      "themeChoiceModal"
+    );
+
+  modal.classList.add("fade-out");
+
+  setTimeout(() => {
+
+    modal.classList.add("hidden");
+    modal.classList.remove("fade-out");
+
+  }, 250);
+
+  editingThemeIndex = null;
+  editingThemeListIndex = null;
+
+}
+
+
+function renderTempPersonRoles(){
+  const div = document.getElementById("personRoleList");
+
+  if(!div) return;
+
+  div.innerHTML = "";
+
+  tempPersonRoles.forEach((role, index) => {
+    div.innerHTML += `
+      <span class="chip">
+        ${role}
+        <span onclick="removeTempPersonRole(${index})" style="cursor:pointer;">✖</span>
+      </span>
+    `;
+  });
+}
+
+
+let niceConfirmCallback = null;
+
+function showNiceAlert(title, message){
+  document.getElementById("niceAlertTitle").innerText = title;
+  document.getElementById("niceAlertText").innerText = message;
+  document.getElementById("niceAlertModal").classList.remove("hidden");
+}
+
+function closeNiceAlert(){
+  document.getElementById("niceAlertModal").classList.add("hidden");
+}
+
+function showNiceConfirm(title, message, buttonText, onConfirm){
+  document.getElementById("niceConfirmTitle").innerText = title;
+  document.getElementById("niceConfirmText").innerText = message;
+  document.getElementById("niceConfirmButton").innerText = buttonText || "Bestätigen";
+
+  niceConfirmCallback = onConfirm;
+
+  document.getElementById("niceConfirmModal").classList.remove("hidden");
+}
+
+function closeNiceConfirm(){
+
+  const modal =
+    document.getElementById(
+      "niceConfirmModal"
+    );
+
+  modal.classList.add("fade-out");
+
+  setTimeout(() => {
+
+    modal.classList.add("hidden");
+    modal.classList.remove("fade-out");
+
+  }, 250);
+
+  niceConfirmCallback = null;
+
+}
+
+function confirmNiceAction(){
+  const action = niceConfirmCallback;
+
+  closeNiceConfirm();
+
+  if(typeof action === "function"){
+    action();
+  }
+}
+
+
+function openArchiveList(){
+
+  renderArchives();
+
+  document
+    .getElementById(
+      "archiveListModal"
+    )
+    .classList.remove("hidden");
+
+}
+
+function closeArchiveList(){
+
+  const modal =
+    document.getElementById(
+      "archiveListModal"
+    );
+
+  modal.classList.add("fade-out");
+
+  setTimeout(() => {
+
+    modal.classList.add("hidden");
+    modal.classList.remove("fade-out");
+
+  }, 250);
+
+}
+
+
+function exportArchivePDF(archive){
+
+  const { jsPDF } = window.jspdf;
+
+  const doc = new jsPDF();
+
+  const weekday = [
+    "Sonntag",
+    "Montag",
+    "Dienstag",
+    "Mittwoch",
+    "Donnerstag",
+    "Freitag",
+    "Samstag"
+  ];
+
+  doc.setFontSize(18);
+  doc.text("Archivierter Dienstplan", 14, 15);
+
+  const rows = archive.result.map(entry => {
+
+    const date =
+      new Date(entry.date);
+
+    return [
+
+      date.toLocaleDateString(
+        "de-DE",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        }
+      ),
+
+      weekday[
+        date.getDay()
+      ],
+
+      entry.theme ||
+        "Kein Thema",
+
+      entry.cancelled
+        ? "Termin fällt aus"
+        : entry.people.map(p =>
+            p.role
+              ? `${p.name} (${p.role})`
+              : p.name
+          ).join(", ")
+    ];
+
+  });
+
+  doc.autoTable({
+    startY: 25,
+    head: [[
+      "Datum",
+      "Wochentag",
+      "Thema",
+      "Personen"
+    ]],
+    body: rows
+  });
+
+  window.open(
+    doc.output("bloburl"),
+    "_blank"
+  );
+}
+
+
+function removeTempPersonRole(index){
+  tempPersonRoles.splice(index, 1);
+  renderTempPersonRoles();
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const inputsToSave = ["start", "end"];
+
+  inputsToSave.forEach(id => {
+    const el = document.getElementById(id);
+    if(el){
+      el.addEventListener("change", save);
+      el.addEventListener("input", save);
+    }
+  });
+
+  document.querySelectorAll(".days input").forEach(cb => {
+    cb.addEventListener("change", save);
+  });
+});
+
+
+</script>
+
+<!-- MODAL -->
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-box">
+    <h3>Plan löschen?</h3>
+    <p>Willst du den Plan wirklich löschen?</p>
+
+    <div class="modal-actions">
+      <button onclick="closeModal()" class="cancel">Abbrechen</button>
+      <button onclick="confirmDelete()" class="delete">Löschen</button>
+    </div>
+  </div>
+</div>
+<!-- CREATE MODAL -->
+<div id="createModal" class="modal hidden">
+  <div class="modal-box">
+    <h3>Neuen Plan erstellen</h3>
+
+    <input
+  id="planNameInput"
+  placeholder="Wie soll dein Plan heißen?"
+  style="
+    width:calc(100% - 24px);
+    margin-top:10px;
+  ">
+
+    <div class="modal-actions">
+      <button onclick="closeCreateModal()" class="cancel">Abbrechen</button>
+      <button onclick="createPlan()">Erstellen</button>
+    </div>
+  </div>
+</div>
+
+<!-- PERSON MODAL -->
+<div id="personModal" class="modal hidden">
+  <div class="modal-box" style="width:700px; text-align:left;">
+
+    <h2 id="personModalTitle">
+  Neue Person hinzufügen
+</h2>
+
+<p class="desc" id="personModalDescription">
+  Erfassen Sie die Verfügbarkeiten und die Rolle der Person.
+</p>
+
+    <div class="grid-2">
+      <div>
+        <label>Name</label>
+<input
+  id="newPersonName"
+  placeholder="Max Mustermann"
+  style="max-width:220px;">
+      </div>
+
+      <div>
+  <label>Rollen</label>
+
+  <div style="display:flex; gap:8px; align-items:center;">
+    <input id="newRoleInput" placeholder="z. B. Leiter">
+    <button type="button" onclick="addTempPersonRole()" style="white-space:nowrap;">
+      + Rolle
+    </button>
+  </div>
+
+  <div id="personRoleList" style="margin-top:8px;"></div>
+</div>
+    </div>
+
+    <div class="grid-2 mt">
+      <div>
+        <label>Ruhetage (Mindestabstand)</label>
+<input
+  type="number"
+  id="restDays"
+  value="0"
+  style="max-width:100px;">
+      </div>
+
+      <div>
+        <label>Max. Einsätze / Monat</label>
+<input
+  type="number"
+  id="maxUses"
+  placeholder="Unbegrenzt"
+  style="max-width:100px;">
+      </div>
+    </div>
+
+    <div class="mt">
+  <label>Kennfarbe</label>
+
+  <div id="colorPicker" style="
+    display:flex;
+    gap:10px;
+    margin-top:8px;
+    flex-wrap:wrap;
+  ">
+
+    <div class="color-choice active"
+         data-color="#3b82f6"
+         style="background:#3b82f6"></div>
+
+    <div class="color-choice"
+         data-color="#22c55e"
+         style="background:#22c55e"></div>
+
+    <div class="color-choice"
+         data-color="#facc15"
+         style="background:#facc15"></div>
+
+    <div class="color-choice"
+         data-color="#ef4444"
+         style="background:#ef4444"></div>
+
+    <div class="color-choice"
+         data-color="#f97316"
+         style="background:#f97316"></div>
+
+    <div class="color-choice"
+         data-color="#000000"
+         style="background:#000000"></div>
+
+  </div>
+
+  <input
+    type="hidden"
+    id="color"
+    value="#3b82f6"
+  >
+</div>
+	
+
+<div class="mt">
+
+  <button
+    type="button"
+    onclick="openBlockedDatesModal()">
+
+    📅 Sperrtermine anzeigen
+
+  </button>
+
+</div>
+
+    <div class="modal-actions">
+      <button class="cancel" onclick="closePersonModal()">Abbrechen</button>
+      <button id="personSaveBtn" onclick="savePerson()">
+  Hinzufügen
+</button>
+
+    </div>
+
+  </div>
+</div>
+<!-- PERSON DELETE MODAL -->
+<div id="deletePersonModal" class="modal hidden">
+  <div class="modal-box">
+    <h3>Person löschen?</h3>
+    <p>
+  Möchtest du diese Person wirklich löschen?
+  <br><br>
+  Alle Einstellungen, Rollen und Sperrtermine der Person gehen dabei verloren.
+</p>
+
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeDeletePersonModal()">Abbrechen</button>
+      <button
+  onclick="confirmDeletePerson()"
+  style="
+    background:#fee2e2;
+    color:#b91c1c;
+  ">
+  🗑 Löschen
+</button>
+    </div>
+  </div>
+</div>
+
+<!-- RULE MODAL -->
+<div id="ruleModal" class="modal hidden">
+  <div class="modal-box" style="width:500px; text-align:left;">
+
+    <h2>Neue Regel erstellen</h2>
+    <p class="desc">
+      Wählen Sie zwei Personen und definieren Sie deren Beziehung im Dienstplan.
+    </p>
+
+    <label>Bedingung</label>
+    <select id="ruleType">
+      <option value="together">Immer zusammen planen</option>
+      <option value="separate">Nie zusammen planen</option>
+    </select>
+
+    <div class="grid-2 mt">
+      <div>
+        <label>Person A</label>
+        <select id="personA"></select>
+      </div>
+
+      <div>
+        <label>Person B</label>
+        <select id="personB"></select>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeRuleModal()">Abbrechen</button>
+      <button onclick="saveRule()">Speichern</button>
+    </div>
+
+  </div>
+</div>
+
+<div id="editModal" class="modal hidden">
+  <div class="modal-box" style="width:500px; text-align:left;">
+
+    <h3>Personen bearbeiten</h3>
+    <p id="editDate"></p>
+
+    <div id="editPeopleList"></div>
+
+    <div style="margin-top:15px;">
+      <select id="editSelect"></select>
+      <button onclick="addPersonToSlot()">+ Hinzufügen</button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeEditModal()">Schließen</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- SCHÖNES HINWEIS MODAL -->
+<!-- SCHÖNES HINWEIS MODAL -->
+<div id="niceAlertModal" class="modal hidden">
+  <div class="modal-box" style="width:420px;">
+    <h3 id="niceAlertTitle">Hinweis</h3>
+
+    <p id="niceAlertText" style="white-space:pre-line;"></p>
+
+    <div class="modal-actions">
+      <button onclick="closeNiceAlert()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCHÖNES BESTÄTIGUNGS MODAL -->
+<div id="niceConfirmModal" class="modal hidden">
+  <div class="modal-box" style="width:460px;">
+    <h3 id="niceConfirmTitle">Bestätigung</h3>
+
+    <p id="niceConfirmText" style="white-space:pre-line;"></p>
+
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeNiceConfirm()">Abbrechen</button>
+      <button id="niceConfirmButton" onclick="confirmNiceAction()">Bestätigen</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="archivePreviewModal" class="modal hidden">
+
+  <div class="modal-box"
+       style="
+         width:800px;
+         height:80vh;
+         display:flex;
+         flex-direction:column;
+       ">
+
+    <h3>📦 Archivvorschau</h3>
+
+    <div
+      id="archivePreviewContent"
+      style="
+        flex:1;
+        overflow-y:auto;
+        margin-top:15px;
+        margin-bottom:15px;
+        padding-right:10px;
+      ">
+    </div>
+
+    <div class="modal-actions">
+
+  <button
+    class="cancel"
+    onclick="closeArchivePreview()">
+
+    Schließen
+
+  </button>
+
+  <button id="archivePdfBtn">
+
+    📄 PDF erstellen
+
+  </button>
+
+  <button id="loadArchiveBtn">
+
+    📥 Plan laden
+
+  </button>
+
+</div>
+
+  </div>
+</div>
+
+<div id="archiveListModal" class="modal hidden">
+
+  <div class="modal-box"
+       style="
+         width:800px;
+         max-height:80vh;
+         display:flex;
+         flex-direction:column;
+       ">
+
+    <h3>📦 Archiv</h3>
+
+    <div id="archiveListContent"
+         style="
+           overflow-y:auto;
+           flex:1;
+           margin-top:15px;
+         ">
+    </div>
+
+    <div class="modal-actions">
+
+      <button
+        class="cancel"
+        onclick="closeArchiveList()">
+
+        Schließen
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div id="statsModal" class="modal hidden">
+
+  <div class="modal-box"
+       style="
+         width:800px;
+         max-height:80vh;
+         display:flex;
+         flex-direction:column;
+       ">
+
+    <h3>📊 Statistik</h3>
+
+    <div id="statsContent"
+         style="
+           overflow-y:auto;
+           flex:1;
+           margin-top:15px;
+         ">
+    </div>
+
+    <div class="modal-actions">
+      <button
+        class="cancel"
+        onclick="closeStatsModal()">
+        Schließen
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<div id="archiveNameModal" class="modal hidden">
+  <div class="modal-box" style="width:500px;">
+
+    <h3>📦 Plan archivieren</h3>
+
+    <p>
+      Wie soll der archivierte Plan heißen?
+    </p>
+
+    <input
+      id="archiveNameInput"
+      placeholder="z. B. Sommerferien 2026"
+    >
+
+    <div class="modal-actions">
+      <button
+        class="cancel"
+        onclick="closeArchiveNameModal()">
+        Abbrechen
+      </button>
+
+      <button onclick="confirmArchiveName()">
+        Archivieren
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<div id="themeChoiceModal" class="modal hidden">
+<div id="themeListModal" class="modal hidden">
+
+  <div class="modal-box"
+       style="
+         width:600px;
+         max-height:80vh;
+         display:flex;
+         flex-direction:column;
+       ">
+
+    <h3>📚 Themenliste</h3>
+
+    <div id="themeListSelection"
+         style="
+           overflow-y:auto;
+           margin-top:15px;
+           flex:1;
+         ">
+    </div>
+
+    <div class="modal-actions">
+
+      <button
+        class="cancel"
+        onclick="closeThemeList()">
+        Schließen
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+  <div class="modal-box" style="width:500px;">
+
+    <h3>Thema bearbeiten</h3>
+
+    <p class="desc">
+      Möchtest du ein eigenes Thema eingeben oder eines aus der Themenliste auswählen?
+    </p>
+
+    <div style="margin-top:20px;">
+
+  <label>Eigenes Thema</label>
+
+  <input
+  id="customThemeInput"
+  placeholder="Thema eingeben..."
+  style="
+    max-width:95%;
+    margin-top:8px;
+  "
+>
+
+</div>
+
+<div style="
+  display:flex;
+  gap:10px;
+  margin-top:20px;
+">
+
+  <button onclick="saveCustomTheme()">
+    ✅ Speichern
+  </button>
+
+  <button
+    class="cancel"
+    onclick="closeThemeModal()">
+    Abbrechen
+  </button>
+
+  <button onclick="openThemeList()">
+    📚 Themenliste
+  </button>
+
+</div>
+
+  </div>
+
+</div>
+
+
+<div id="blockedDatesModal"
+     class="modal hidden">
+
+  <div class="modal-box"
+       style="
+         width:700px;
+         text-align:left;
+       ">
+       
+
+    <h3>📅 Sperrtermine verwalten</h3>
+
+    <h4 style="margin-bottom:10px;">
+  Einzeltage
+</h4>
+
+    <input
+  type="date"
+  id="blockedDateInput"
+  style="max-width:220px;">
+
+    <button onclick="addBlockedDate()">
+      + Hinzufügen
+    </button>
+
+    <div id="blockedDateList"
+     style="margin-top:12px;">
+</div>
+
+    <hr style="margin:20px 0;">
+
+    <h4>Zeiträume</h4>
+
+    <input
+  type="date"
+  id="blockedRangeStart"
+  style="max-width:220px;">
+
+<input
+  type="date"
+  id="blockedRangeEnd"
+  style="max-width:220px;">
+
+    <button onclick="addBlockedRange()">
+      + Zeitraum hinzufügen
+    </button>
+
+    <div id="blockedRangeList"
+     style="margin-top:12px;">
+</div>
+
+    <div class="modal-actions">
+
+      <button
+        class="cancel"
+        onclick="closeBlockedDatesModal()">
+
+        Schließen
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+</body>
+</html>
