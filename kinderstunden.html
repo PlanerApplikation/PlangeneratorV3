@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+
+
+<meta charset="UTF-8">
+<title>Kinderstunde – Quartalswechsel</title>
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  
+
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+console.log("XLSX geladen:", XLSX);
+</script>
+
+<style>
+
+body{
+  font-family:'Inter',sans-serif;
+  background:#f8fafc;
+  margin:0;
+  color:#1e293b;
+}
+
+.header{
+  background:white;
+  padding:20px 30px;
+  border-bottom:1px solid #e2e8f0;
+}
+
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:30px;
+}
+
+.card{
+  background:white;
+  border-radius:16px;
+  padding:25px;
+  box-shadow:0 5px 15px rgba(0,0,0,.05);
+  margin-bottom:20px;
+}
+
+button{
+  background:#dbeafe;
+  color:#1e40af;
+  border:none;
+  padding:10px 16px;
+  border-radius:12px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#bfdbfe;
+}
+
+
+.file-btn{
+  background:#ffffff;
+  border:2px dashed #93c5fd;
+  color:#1e40af;
+  padding:14px 18px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:600;
+  transition:all .2s;
+  display:inline-block;
+  width:100%;
+  text-align:center;
+  box-sizing:border-box;
+}
+
+.file-btn:hover{
+  background:#eff6ff;
+  transform:translateY(-2px);
+  box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+input[type="file"]{
+  display:none;
+}
+
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+
+.modal-content{
+  background:white;
+  border-radius:16px;
+  padding:25px;
+  width:350px;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+
+.modal-content h3{
+  margin-top:0;
+}
+
+.modal-option{
+  width:100%;
+  margin-bottom:10px;
+  background:#eff6ff;
+  color:#1e40af;
+  border:none;
+  border-radius:12px;
+  padding:12px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.modal-option:hover{
+  background:#dbeafe;
+  transform:translateY(-2px);
+}
+
+.upload-box{
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:15px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th{
+  background:#eff6ff;
+  color:#1e40af;
+}
+
+td,th{
+  padding:12px;
+  border-bottom:1px solid #e2e8f0;
+}
+
+.stats{
+  display:flex;
+  gap:15px;
+  margin-bottom:20px;
+}
+
+.stat-card{
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 5px 15px rgba(0,0,0,.05);
+  min-width:180px;
+}
+
+.stat-value{
+  font-size:28px;
+  font-weight:700;
+  color:#2563eb;
+}
+
+</style>
+</head>
+<body>
+<div class="modal" id="fileModal">
+
+  <div class="modal-content">
+
+    <h3>Dateityp auswählen</h3>
+
+    <button
+      class="modal-option"
+      onclick="selectType('.xlsx')">
+      📊 Excel-Datei
+    </button>
+
+    <button
+      class="modal-option"
+      onclick="selectType('.csv')">
+      📄 CSV-Datei
+    </button>
+
+    <button
+      class="modal-option"
+      onclick="selectType('.pdf')">
+      📕 PDF-Datei
+    </button>
+
+    <button onclick="closeModal()">
+      Abbrechen
+    </button>
+
+  </div>
+
+</div>
+
+<div class="modal" id="deleteModal">
+
+  <div class="modal-content">
+
+    <h3>🗑 Datei entfernen</h3>
+
+    <p>
+      Willst du die Datei wirklich entfernen?
+    </p>
+
+    <button
+      onclick="confirmDelete()"
+      style="
+        background:#dc2626;
+        color:white;
+      "
+    >
+      Ja, entfernen
+    </button>
+
+    <button onclick="closeDeleteModal()">
+      Abbrechen
+    </button>
+
+  </div>
+
+</div>
+
+<div class="modal" id="pdfModal">
+
+  <div class="modal-content">
+
+    <h3>PDF erstellen</h3>
+
+    <p>Für welche Gruppe?</p>
+
+    <button onclick="createPDF('4–6')">
+      Gruppe 4–6
+    </button>
+
+    <button onclick="createPDF('6–8')">
+      Gruppe 6–8
+    </button>
+
+    <button onclick="createPDF('8–12')">
+      Gruppe 8–12
+    </button>
+
+    <button onclick="closePDFModal()">
+      Abbrechen
+    </button>
+
+  </div>
+
+</div>
+
+<div class="header">
+  <h2>👧 Kinderstunde – Quartalswechsel</h2>
+</div>
+
+<div class="container">
+
+<div class="card">
+
+<p><strong>Excel-Dateien auswählen:</strong></p>
+
+<label>
+  <strong>Gruppe 4–6 Jahre</strong><br>
+  <input
+  type="file"
+  id="g45"
+  accept=".xlsx,.csv,.pdf"
+  onchange="updateFileName(this)">
+
+<button
+  type="button"
+  class="file-btn"
+  onclick="openModal('g45')">
+  📂 Datei auswählen
+</button>
+<div
+  id="g45Name"
+  style="
+    margin-top:8px;
+    color:#64748b;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  "
+>
+  <span>Keine Datei ausgewählt</span>
+
+  <button
+    type="button"
+    id="g45Remove"
+    onclick="removeFile('g45')"
+    style="
+      display:none;
+      background:#fee2e2;
+      color:#dc2626;
+    "
+  >
+    Entfernen
+  </button>
+
+</div>
+</label>
+<br><br>
+
+<label>
+  <strong>Gruppe 6–8 Jahre</strong><br>
+  <input
+  type="file"
+  id="g67"
+  accept=".xlsx,.csv,.pdf"
+  onchange="updateFileName(this)">
+
+<button
+  type="button"
+  class="file-btn"
+  onclick="openModal('g67')">
+  📂 Datei auswählen
+</button>
+<div
+  id="g67Name"
+  style="
+    margin-top:8px;
+    color:#64748b;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  "
+>
+  <span>Keine Datei ausgewählt</span>
+
+  <button
+    type="button"
+    id="g67Remove"
+    onclick="removeFile('g67')"
+    style="
+      display:none;
+      background:#fee2e2;
+      color:#dc2626;
+    "
+  >
+    Entfernen
+  </button>
+
+</div>
+</label>
+<br><br>
+
+<label>
+  <strong>Gruppe 8–12 Jahre</strong><br>
+  <input
+  type="file"
+  id="g811"
+  accept=".xlsx,.csv,.pdf"
+  onchange="updateFileName(this)">
+
+<button
+  type="button"
+  class="file-btn"
+  onclick="openModal('g811')">
+  📂 Datei auswählen
+</button>
+<div
+  id="g811Name"
+  style="
+    margin-top:8px;
+    color:#64748b;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  "
+>
+  <span>Keine Datei ausgewählt</span>
+
+  <button
+    type="button"
+    id="g811Remove"
+    onclick="removeFile('g811')"
+    style="
+      display:none;
+      background:#fee2e2;
+      color:#dc2626;
+    "
+  >
+    Entfernen
+  </button>
+
+</div>
+</label>
+</div>
+<button onclick="auswerten()">Auswerten</button>
+<button onclick="exportExcel()">Excel herunterladen</button>
+<button onclick="gruppeWaehlenPDF()">
+  PDF erstellen
+</button>
+<div class="stats">
+
+  <div class="stat-card">
+    <div class="stat-value" id="gesamtWechsel">0</div>
+    Wechsel gesamt
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-value" id="naechstesQuartal">0</div>
+    Nächstes Quartal
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-value" id="jungschar">0</div>
+    Zur Jungschar
+  </div>
+
+</div>
+<table id="result">
+<thead>
+<tr>
+<th>Vorname</th>
+<th>Nachname</th>
+<th>Geburtsdatum</th>
+<th>Aktuelle Gruppe</th>
+<th>Wechsel am</th>
+<th>Neue Gruppe</th>
+<th>Nächstes Quartal</th>
+<th>Hinweis</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<script>
+let ergebnis = [];
+let activeInput = null;
+
+function openModal(inputId){
+
+  activeInput =
+    document.getElementById(inputId);
+
+  document.getElementById(
+    "fileModal"
+  ).style.display = "flex";
+}
+
+function closeModal(){
+
+  document.getElementById(
+    "fileModal"
+  ).style.display = "none";
+}
+
+function selectType(type){
+
+  if(!activeInput) return;
+
+  activeInput.accept = type;
+
+  closeModal();
+
+  activeInput.click();
+}
+
+function updateFileName(input){
+
+  const container =
+    document.getElementById(
+      input.id + "Name"
+    );
+
+  const text =
+    container.querySelector("span");
+
+  const removeBtn =
+    document.getElementById(
+      input.id + "Remove"
+    );
+
+  if(input.files.length > 0){
+
+    text.innerHTML =
+      "✅ " + input.files[0].name;
+
+    text.style.color =
+      "#16a34a";
+
+    removeBtn.style.display =
+      "inline-block";
+
+  }else{
+
+    text.innerHTML =
+      "Keine Datei ausgewählt";
+
+    text.style.color =
+      "#64748b";
+
+    removeBtn.style.display =
+      "none";
+  }
+
+}
+
+let deleteInputId = null;
+
+function removeFile(inputId){
+
+  deleteInputId = inputId;
+
+  document.getElementById(
+    "deleteModal"
+  ).style.display = "flex";
+}
+
+function closeDeleteModal(){
+
+  document.getElementById(
+    "deleteModal"
+  ).style.display = "none";
+}
+
+function gruppeWaehlenPDF(){
+
+  document.getElementById(
+    "pdfModal"
+  ).style.display = "flex";
+
+}
+
+function closePDFModal(){
+
+  document.getElementById(
+    "pdfModal"
+  ).style.display = "none";
+
+}
+``
+
+
+function confirmDelete(){
+
+  const input =
+    document.getElementById(
+      deleteInputId
+    );
+
+  input.value = "";
+
+  updateFileName(input);
+
+  closeDeleteModal();
+}
+
+function holeGeburtsdatum(k) {
+  for (const key in k) {
+    const norm = key
+      .toLowerCase()
+      .replace(/\s/g, "")
+      .replace(/\./g, "");
+
+    if (norm === "geburtsdatum" || norm === "gebdatum") {
+      return k[key];
+    }
+  }
+  return null;
+}
+
+
+function parseDate(d) {
+  if (!d) return null;
+
+  // Excel-Datumszahl (z. B. 44513)
+  if (typeof d === "number") {
+    // Excel zählt ab 01.01.1900
+    return new Date(Math.round((d - 25569) * 86400 * 1000));
+  }
+
+  // Excel-Datum (Date-Objekt)
+  if (d instanceof Date) {
+    return d;
+  }
+
+  // Text-Datum TT.MM.JJJJ
+  if (typeof d === "string") {
+    const parts = d.split(".");
+    if (parts.length !== 3) return null;
+    const [t, m, j] = parts;
+    return new Date(j, m - 1, t);
+  }
+
+  return null;
+}
+
+
+function nextQuarter(date) {
+  const y = date.getFullYear();
+  const qs = [
+    new Date(y,0,1),
+    new Date(y,3,1),
+    new Date(y,6,1),
+    new Date(y,9,1),
+    new Date(y+1,0,1)
+  ];
+  return qs.find(q => q > date);
+}
+
+function gruppeNachAlter(alter) {
+  if (alter < 6) return "4–6";
+  if (alter < 8) return "6–8";
+  return "8–12";
+}
+
+function alterAm(dob, stichtag) {
+  let a = stichtag.getFullYear() - dob.getFullYear();
+  if (stichtag < new Date(stichtag.getFullYear(), dob.getMonth(), dob.getDate())) a--;
+  return a;
+}
+
+function leseExcel(file, gruppe) {
+  return new Promise(resolve => {
+    const r = new FileReader();
+    r.onload = e => {
+      const wb = XLSX.read(e.target.result, {type:'binary'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws);
+      rows.forEach(r => r._gruppe = gruppe);
+      resolve(rows);
+    };
+    r.readAsBinaryString(file);
+  });
+}
+
+async function auswerten() {
+  ergebnis = [];
+  const files = [
+  { f: document.getElementById("g45").files[0], g: "4–6" },
+{ f: document.getElementById("g67").files[0], g: "6–8" },
+{ f: document.getElementById("g811").files[0], g: "8–12" }
+];
+
+  let alle = [];
+  for (const x of files) {
+    if (x.f) alle = alle.concat(await leseExcel(x.f, x.g));
+  }
+
+  const tbody = document.querySelector("#result tbody");
+  tbody.innerHTML = "";
+
+  alle.forEach(k => {
+    const dobRaw = holeGeburtsdatum(k);
+const dob = parseDate(dobRaw);
+
+
+let wechselText = "—";
+let neueGruppe = "—";
+let warnung = "";
+let wechsel = null;
+
+if (dob) {
+
+
+const alterHeute = alterAm(dob, new Date());
+const erwarteteGruppe = gruppeNachAlter(alterHeute);
+
+if (erwarteteGruppe !== k._gruppe && k._gruppe !== "8–12") {
+  warnung = "⚠ Gruppe prüfen";
+}
+
+  wechsel = wechselDatum(dob, k._gruppe);
+
+  if (wechsel) {
+    if (k._gruppe === "8–12") {
+  neueGruppe = "Jungschar";
+
+} else {
+  neueGruppe = gruppeNachAlter(alterAm(dob, wechsel));
+}
+    wechselText = formatDate(wechsel);
+  }
+}
+const wechseltNaechstes = wechsel ? istNaechstesQuartal(wechsel) : false;
+
+    ergebnis.push({
+  Vorname: k.Vorname,
+  Nachname: k.Nachname,
+  Geburtsdatum: formatDate(dob),
+  AktuelleGruppe: k._gruppe,
+  WechselAm: wechselText,
+  NeueGruppe: neueGruppe,
+  WechseltNaechstesQuartal: wechseltNaechstes ? "Ja" : "",
+  Hinweis: warnung
+});
+
+    const tr = document.createElement("tr");
+    
+
+tr.innerHTML = `
+  <td>${k.Vorname}</td>
+  <td>${k.Nachname}</td>
+  <td>${formatDate(dob)}</td>
+  <td>${k._gruppe}</td>
+  <td>${wechselText}</td>
+  <td>${neueGruppe}</td>
+  <td>${wechseltNaechstes ? "✅ Ja" : "—"}</td>
+  <td>${warnung}</td>
+`;
+tbody.appendChild(tr);
+  });
+  
+  
+  const anzahlWechsel = ergebnis.filter(e => e.WechselAm !== "—").length;
+const jungschar = ergebnis.filter(e => e.NeueGruppe === "Jungschar").length;
+const naechstes = ergebnis.filter(e => e.WechseltNaechstesQuartal === "Ja").length;
+
+document.getElementById("gesamtWechsel").innerText =
+  anzahlWechsel;
+
+document.getElementById("naechstesQuartal").innerText =
+  naechstes;
+
+document.getElementById("jungschar").innerText =
+  jungschar;
+
+}
+
+
+function wechselDatum(dob, aktuelleGruppe) {
+  let zielAlter = null;
+
+  if (aktuelleGruppe === "4–6") zielAlter = 6;
+  if (aktuelleGruppe === "6–8") zielAlter = 8;
+  if (aktuelleGruppe === "8–12") zielAlter = 12;
+  if (zielAlter === null) return null;
+
+  // Geburtstag, an dem das Zielalter erreicht wird
+  const geburtstag = new Date(
+    dob.getFullYear() + zielAlter,
+    dob.getMonth(),
+    dob.getDate()
+  );
+
+  // Wechsel zum nächsten Quartalsanfang danach
+  return nextQuarter(geburtstag);
+}
+
+
+
+function formatDate(date) {
+  if (!date) return "";
+
+  const t = String(date.getDate()).padStart(2, "0");
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const j = date.getFullYear();
+
+  return `${t}.${m}.${j}`;
+}
+
+
+function aktuellerQuartalsStart() {
+  const heute = new Date();
+  const m = heute.getMonth();
+  const q = Math.floor(m / 3) * 3;
+  return new Date(heute.getFullYear(), q, 1);
+}
+
+function istNaechstesQuartal(wechsel) {
+  if (!wechsel) return false;
+  const jetzt = aktuellerQuartalsStart();
+  const naechstes = new Date(jetzt.getFullYear(), jetzt.getMonth() + 3, 1);
+  return wechsel.getTime() === naechstes.getTime();
+}
+
+function createPDF(gruppe){
+
+  closePDFModal();
+
+  const { jsPDF } = window.jspdf;
+
+  const doc = new jsPDF();
+
+  let y = 20;
+
+  doc.setFontSize(18);
+
+  doc.text(
+    "Kinderstunde " + gruppe,
+    10,
+    y
+  );
+
+  y += 15;
+
+  doc.setFontSize(12);
+
+  doc.text(
+    "Aktuelle Kinder:",
+    10,
+    y
+  );
+
+  y += 10;
+
+  const aktuellesJahr =
+  new Date().getFullYear();
+
+ergebnis
+  .filter(
+    k => k.AktuelleGruppe === gruppe
+  )
+  .forEach(k => {
+
+    doc.text(
+      k.Vorname + " " + k.Nachname,
+      15,
+      y
+    );
+
+    y += 6;
+
+    if(
+      k.WechselAm !== "—" &&
+      k.WechselAm.endsWith(
+        String(aktuellesJahr)
+      )
+    ){
+
+      doc.text(
+        "Geht am: " +
+        k.WechselAm,
+        20,
+        y
+      );
+
+    }else{
+
+      doc.text(
+        "Bleibt in der Gruppe",
+        20,
+        y
+      );
+
+    }
+
+    y += 10;
+
+  });
+  
+  y += 10;
+
+doc.text(
+  "Kommt noch dieses Jahr:",
+  10,
+  y
+);
+
+y += 10;
+
+
+ergebnis
+  .filter(k => {
+
+    if(k.NeueGruppe !== gruppe)
+      return false;
+
+    if(k.WechselAm === "—")
+      return false;
+
+    return k.WechselAm.endsWith(
+      String(aktuellesJahr)
+    );
+
+  })
+  .forEach(k => {
+
+    doc.text(
+      k.Vorname +
+      " " +
+      k.Nachname,
+      15,
+      y
+    );
+
+    y += 6;
+
+    doc.text(
+      "Kommt am: " +
+      k.WechselAm,
+      20,
+      y
+    );
+
+    y += 10;
+
+  });
+
+  doc.save(
+    "Kinderstunde_" + gruppe + ".pdf"
+  );
+
+}
+
+function exportExcel() {
+  const ws = XLSX.utils.json_to_sheet(ergebnis);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Wechsel");
+  XLSX.writeFile(wb, "Kinder_Quartalswechsel.xlsx");
+}
+</script>
+</div>
+</body>
+</html>
