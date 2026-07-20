@@ -3008,7 +3008,28 @@ if(
         if(blockedDates.includes(dateStr)){
           return false;
         }
+const blockedRanges =
+  person.blockedRanges || [];
 
+for(const range of blockedRanges){
+
+  const currentDate =
+    new Date(date);
+
+  const start =
+    new Date(range.start);
+
+  const end =
+    new Date(range.end);
+
+  if(
+    currentDate >= start &&
+    currentDate <= end
+  ){
+    return false;
+  }
+
+}
         if(!hasEnoughRest(person, date)){
           return false;
         }
