@@ -227,6 +227,19 @@ td,th{
     <h3>PDF erstellen</h3>
 
     <p>Für welche Gruppe?</p>
+	
+	<p>Titel:</p>
+
+<input
+  type="text"
+  id="pdfTitel"
+  value="Anwesenheitsliste"
+  style="
+    width:100%;
+    margin-bottom:10px;
+    padding:8px;
+    box-sizing:border-box;
+  ">
 
     <p>Gruppe:</p>
 
@@ -1194,11 +1207,15 @@ if(gruppe === "1–4"){
 
     doc.setFontSize(16);
 
-    doc.text(
-      `Anwesenheitsliste ${gruppe} (${jahr})`,
-      10,
-      12
-    );
+    const titel =
+  document.getElementById("pdfTitel").value
+  || "Anwesenheitsliste";
+
+doc.text(
+  `${titel} (${jahr})`,
+  10,
+  12
+);
 
     const monate = [
       "Januar",
@@ -1883,6 +1900,9 @@ window.onload = function() {
 
 </script>
 </div>
+
+
+
 
 <div class="modal" id="infoModal">
 
