@@ -61,24 +61,24 @@ button:hover{
 
 
 .file-btn{
-  background:#ffffff;
-  border:2px dashed #93c5fd;
-  color:#1e40af;
-  padding:14px 18px;
-  border-radius:12px;
+  background:#eff6ff;
+  border:1px solid #bfdbfe;
+  color:#1d4ed8;
+  padding:6px 12px;
+  border-radius:8px;
   cursor:pointer;
-  font-weight:600;
+  font-weight:500;
+  font-size:13px;
   transition:all .2s;
   display:inline-block;
-  width:100%;
+  width:auto;
   text-align:center;
-  box-sizing:border-box;
 }
 
 .file-btn:hover{
-  background:#eff6ff;
-  transform:translateY(-2px);
-  box-shadow:0 5px 15px rgba(0,0,0,.08);
+  background:#dbeafe;
+  box-shadow:none;
+  transform:none;
 }
 
 input[type="file"]{
@@ -180,20 +180,9 @@ td,th{
     <button
       class="modal-option"
       onclick="selectType('.xlsx')">
-      📊 Excel-Datei
+      📊 Excel / CSV-Datei
     </button>
 
-    <button
-      class="modal-option"
-      onclick="selectType('.csv')">
-      📄 CSV-Datei
-    </button>
-
-    <button
-      class="modal-option"
-      onclick="selectType('.pdf')">
-      📕 PDF-Datei
-    </button>
 
     <button onclick="closeModal()">
       Abbrechen
@@ -239,17 +228,40 @@ td,th{
 
     <p>Für welche Gruppe?</p>
 
-    <button onclick="createPDF('4–6')">
-      Gruppe 4–6
-    </button>
+    <p>Gruppe:</p>
 
-    <button onclick="createPDF('6–8')">
-      Gruppe 6–8
-    </button>
+<select id="pdfGruppe" style="width:100%;margin-bottom:10px;">
+<option value="1–4">1–4 Jahre</option>
+  <option value="4–6">4–6 Jahre</option>
+  <option value="6–8">6–8 Jahre</option>
+  <option value="8–12">8–12 Jahre</option>
+</select>
 
-    <button onclick="createPDF('8–12')">
-      Gruppe 8–12
-    </button>
+<p>Format:</p>
+
+<label>
+  <input
+    type="radio"
+    name="pdfFormat"
+    value="portrait"
+    checked>
+  Hochformat
+</label>
+
+<br>
+
+<label>
+  <input
+    type="radio"
+    name="pdfFormat"
+    value="landscape">
+  Querformat
+</label>
+
+<button onclick="pdfErstellen()">
+  PDF erstellen
+</button>
+
 
     <button onclick="closePDFModal()">
       Abbrechen
@@ -269,12 +281,75 @@ td,th{
 
 <p><strong>Excel-Dateien auswählen:</strong></p>
 
-<label>
+
+<div style="
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+">
+
+<label style="
+  flex:1;
+  min-width:250px;
+">
+
+
+<label style="
+  flex:1;
+  min-width:250px;
+">
+
+  <strong>Krabbelgruppe 1–4 Jahre</strong><br>
+
+  <input
+    type="file"
+    id="g14"
+    accept=".xlsx,.csv"
+    onchange="updateFileName(this)">
+
+  <button
+    type="button"
+    class="file-btn"
+    onclick="openModal('g14')">
+    📂 Datei auswählen
+  </button>
+
+  <div
+    id="g14Name"
+    style="
+      margin-top:8px;
+      color:#64748b;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    "
+  >
+
+    <span>Keine Datei ausgewählt</span>
+
+    <button
+      type="button"
+      id="g14Remove"
+      onclick="removeFile('g14')"
+      style="
+        display:none;
+        background:#fee2e2;
+        color:#dc2626;
+      "
+    >
+      Entfernen
+    </button>
+
+  </div>
+
+</label>
+
+
   <strong>Gruppe 4–6 Jahre</strong><br>
   <input
   type="file"
   id="g45"
-  accept=".xlsx,.csv,.pdf"
+  accept=".xlsx,.csv"
   onchange="updateFileName(this)">
 
 <button
@@ -312,12 +387,15 @@ td,th{
 </label>
 <br><br>
 
-<label>
+<label style="
+  flex:1;
+  min-width:250px;
+">
   <strong>Gruppe 6–8 Jahre</strong><br>
   <input
   type="file"
   id="g67"
-  accept=".xlsx,.csv,.pdf"
+  accept=".xlsx,.csv"
   onchange="updateFileName(this)">
 
 <button
@@ -355,12 +433,15 @@ td,th{
 </label>
 <br><br>
 
-<label>
+<label style="
+  flex:1;
+  min-width:250px;
+">
   <strong>Gruppe 8–12 Jahre</strong><br>
   <input
   type="file"
   id="g811"
-  accept=".xlsx,.csv,.pdf"
+  accept=".xlsx,.csv"
   onchange="updateFileName(this)">
 
 <button
@@ -393,9 +474,105 @@ td,th{
   >
     Entfernen
   </button>
-
+</div>
 </div>
 </label>
+<div class="card">
+
+<h3>Wochentag der Kinderstunde</h3>
+
+<div style="
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+">
+
+<h3>Sperrtermine</h3>
+
+<div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+
+  <input type="date" id="sperrDatum">
+
+  <input
+    type="text"
+    id="sperrGrund"
+    placeholder="Grund">
+
+  <button type="button" onclick="addSperrtermin()">
+    ➕ Hinzufügen
+  </button>
+
+</div>
+
+<table id="sperrtermineTabelle">
+
+  <thead>
+    <tr>
+      <th>Datum</th>
+      <th>Grund</th>
+      <th>Aktion</th>
+    </tr>
+  </thead>
+
+  <tbody></tbody>
+
+</table>
+
+<div>
+  <label><strong>1-4 Jahre</strong></label><br>
+  <select id="tag14">
+    <option value="0">Sonntag</option>
+    <option value="1">Montag</option>
+    <option value="2">Dienstag</option>
+    <option value="3">Mittwoch</option>
+    <option value="4">Donnerstag</option>
+    <option value="5">Freitag</option>
+    <option value="6">Samstag</option>
+  </select>
+</div>
+  <div>
+    <label><strong>4-6 Jahre</strong></label><br>
+    <select id="tag45">
+      <option value="0">Sonntag</option>
+      <option value="1">Montag</option>
+      <option value="2">Dienstag</option>
+      <option value="3">Mittwoch</option>
+      <option value="4">Donnerstag</option>
+      <option value="5">Freitag</option>
+      <option value="6">Samstag</option>
+    </select>
+  </div>
+
+  <div>
+    <label><strong>6-8 Jahre</strong></label><br>
+    <select id="tag67">
+      <option value="0">Sonntag</option>
+      <option value="1">Montag</option>
+      <option value="2">Dienstag</option>
+      <option value="3">Mittwoch</option>
+      <option value="4">Donnerstag</option>
+      <option value="5">Freitag</option>
+      <option value="6">Samstag</option>
+    </select>
+  </div>
+
+  <div>
+    <label><strong>8-12 Jahre</strong></label><br>
+    <select id="tag811">
+      <option value="0">Sonntag</option>
+      <option value="1">Montag</option>
+      <option value="2">Dienstag</option>
+      <option value="3">Mittwoch</option>
+      <option value="4">Donnerstag</option>
+      <option value="5">Freitag</option>
+      <option value="6">Samstag</option>
+    </select>
+  </div>
+
+</div>
+
+</div>
+
 </div>
 <button onclick="auswerten()">Auswerten</button>
 <button onclick="exportExcel()">Excel herunterladen</button>
@@ -439,6 +616,31 @@ td,th{
 <script>
 let ergebnis = [];
 let activeInput = null;
+let sperrtermine = [];
+
+const gruppen = [
+
+  {
+    name: "1–4",
+    wechselAlter: 4
+  },
+
+  {
+    name: "4–6",
+    wechselAlter: 6
+  },
+
+  {
+    name: "6–8",
+    wechselAlter: 8
+  },
+
+  {
+    name: "8–12",
+    wechselAlter: 12
+  }
+
+];
 
 function openModal(inputId){
 
@@ -467,6 +669,31 @@ function selectType(type){
 
   activeInput.click();
 }
+
+
+function pdfErstellen(){
+
+  if(ergebnis.length === 0){
+
+    showInfoModal(
+      "Keine Daten vorhanden",
+      "Bitte zuerst eine Auswertung durchführen, bevor eine PDF erstellt werden kann."
+    );
+
+    return;
+  }
+
+  const gruppe =
+    document.getElementById("pdfGruppe").value;
+
+  const format =
+    document.querySelector(
+      'input[name="pdfFormat"]:checked'
+    ).value;
+
+  createPDF(gruppe, format);
+}
+
 
 function updateFileName(input){
 
@@ -528,6 +755,16 @@ function closeDeleteModal(){
 
 function gruppeWaehlenPDF(){
 
+  if(ergebnis.length === 0){
+
+    showInfoModal(
+      "Keine Daten vorhanden",
+      "Bitte zuerst eine Auswertung durchführen."
+    );
+
+    return;
+  }
+
   document.getElementById(
     "pdfModal"
   ).style.display = "flex";
@@ -541,22 +778,86 @@ function closePDFModal(){
   ).style.display = "none";
 
 }
-``
+
 
 
 function confirmDelete(){
 
   const input =
-    document.getElementById(
-      deleteInputId
-    );
+    document.getElementById(deleteInputId);
 
+  // Gruppe merken
+  let gruppe = "";
+  
+if(deleteInputId === "g14") gruppe = "1–4";
+  if(deleteInputId === "g45") gruppe = "4–6";
+  if(deleteInputId === "g67") gruppe = "6–8";
+  if(deleteInputId === "g811") gruppe = "8–12";
+
+  // Datei entfernen
   input.value = "";
 
   updateFileName(input);
 
+  // Ergebnisse dieser Gruppe entfernen
+  ergebnis = ergebnis.filter(
+    e => e.AktuelleGruppe !== gruppe
+  );
+
+  // Tabelle neu aufbauen
+  const tbody =
+    document.querySelector("#result tbody");
+
+  tbody.innerHTML = "";
+
+  ergebnis.forEach(k => {
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${k.Vorname}</td>
+      <td>${k.Nachname}</td>
+      <td>${k.Geburtsdatum}</td>
+      <td>${k.AktuelleGruppe}</td>
+      <td>${k.WechselAm}</td>
+      <td>${k.NeueGruppe}</td>
+      <td>${k.WechseltNaechstesQuartal === "Ja" ? "✅ Ja" : "—"}</td>
+      <td>${k.Hinweis}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  // Statistiken neu berechnen
+  document.getElementById("gesamtWechsel").innerText =
+    ergebnis.filter(e => e.WechselAm !== "—").length;
+
+  document.getElementById("naechstesQuartal").innerText =
+    ergebnis.filter(e => e.WechseltNaechstesQuartal === "Ja").length;
+
+    document.getElementById("jungschar").innerText =
+    ergebnis.filter(e => e.NeueGruppe === "Jungschar").length;
+
   closeDeleteModal();
 }
+
+
+function grundFuerSperrtermin(datum){
+
+  const datumText =
+    formatDate(datum);
+
+  const treffer =
+    sperrtermine.find(
+      s => s.datum === datumText
+    );
+
+  return treffer
+    ? treffer.grund
+    : null;
+
+}
+
 
 function holeGeburtsdatum(k) {
   for (const key in k) {
@@ -570,6 +871,77 @@ function holeGeburtsdatum(k) {
     }
   }
   return null;
+}
+
+
+function addSperrtermin(){
+
+  const datum =
+    document.getElementById("sperrDatum").value;
+
+  const grund =
+    document.getElementById("sperrGrund").value.trim();
+
+  if(!datum || !grund){
+    return;
+  }
+
+  const [jahr, monat, tag] =
+    datum.split("-");
+
+  sperrtermine.push({
+    datum: `${tag}.${monat}.${jahr}`,
+    grund: grund
+  });
+
+  renderSperrtermine();
+
+  document.getElementById("sperrDatum").value = "";
+  document.getElementById("sperrGrund").value = "";
+}
+
+function deleteSperrtermin(index){
+
+  sperrtermine.splice(index,1);
+
+  renderSperrtermine();
+
+}
+
+function renderSperrtermine(){
+
+  const tbody =
+    document.querySelector(
+      "#sperrtermineTabelle tbody"
+    );
+
+  tbody.innerHTML = "";
+
+  sperrtermine.forEach((eintrag,index)=>{
+
+    const tr =
+      document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${eintrag.datum}</td>
+      <td>${eintrag.grund}</td>
+      <td>
+        <button
+          type="button"
+          onclick="deleteSperrtermin(${index})"
+          style="
+            background:#fee2e2;
+            color:#dc2626;
+          ">
+          🗑
+        </button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+
+  });
+
 }
 
 
@@ -611,10 +983,18 @@ function nextQuarter(date) {
   return qs.find(q => q > date);
 }
 
-function gruppeNachAlter(alter) {
-  if (alter < 6) return "4–6";
-  if (alter < 8) return "6–8";
-  return "8–12";
+function gruppeNachAlter(alter){
+
+  for(const gruppe of gruppen){
+
+    if(alter < gruppe.wechselAlter){
+      return gruppe.name;
+    }
+
+  }
+
+  return "Jungschar";
+
 }
 
 function alterAm(dob, stichtag) {
@@ -638,8 +1018,18 @@ function leseExcel(file, gruppe) {
 }
 
 async function auswerten() {
+
+  // Alte Ergebnisse komplett löschen
+  ergebnis = [];
+
+  document.querySelector("#result tbody").innerHTML = "";
+
+  document.getElementById("gesamtWechsel").innerText = "0";
+  document.getElementById("naechstesQuartal").innerText = "0";
+  document.getElementById("jungschar").innerText = "0";
   ergebnis = [];
   const files = [
+  { f: document.getElementById("g14").files[0], g: "1–4" },
   { f: document.getElementById("g45").files[0], g: "4–6" },
 { f: document.getElementById("g67").files[0], g: "6–8" },
 { f: document.getElementById("g811").files[0], g: "8–12" }
@@ -649,7 +1039,10 @@ async function auswerten() {
   for (const x of files) {
     if (x.f) alle = alle.concat(await leseExcel(x.f, x.g));
   }
-
+  if (alle.length === 0) {
+  alert("Bitte zuerst mindestens eine Datei auswählen.");
+  return;
+}
   const tbody = document.querySelector("#result tbody");
   tbody.innerHTML = "";
 
@@ -694,6 +1087,12 @@ const wechseltNaechstes = wechsel ? istNaechstesQuartal(wechsel) : false;
   AktuelleGruppe: k._gruppe,
   WechselAm: wechselText,
   NeueGruppe: neueGruppe,
+  EintrittInGruppe: formatDate(
+  berechneEintrittsdatum(
+    dob,
+    k._gruppe
+  )
+),
   WechseltNaechstesQuartal: wechseltNaechstes ? "Ja" : "",
   Hinweis: warnung
 });
@@ -730,24 +1129,533 @@ document.getElementById("jungschar").innerText =
 
 }
 
+function createPDF(gruppe, format){
 
-function wechselDatum(dob, aktuelleGruppe) {
-  let zielAlter = null;
+  closePDFModal();
 
-  if (aktuelleGruppe === "4–6") zielAlter = 6;
-  if (aktuelleGruppe === "6–8") zielAlter = 8;
-  if (aktuelleGruppe === "8–12") zielAlter = 12;
-  if (zielAlter === null) return null;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF(format);
 
-  // Geburtstag, an dem das Zielalter erreicht wird
-  const geburtstag = new Date(
-    dob.getFullYear() + zielAlter,
-    dob.getMonth(),
-    dob.getDate()
+  const PAGE_W =
+    doc.internal.pageSize.getWidth();
+
+  const PAGE_H =
+    doc.internal.pageSize.getHeight();
+
+  const START_X = 47;
+  const COL_W = 4.2;
+
+  let tag = 0;
+
+
+if(gruppe === "1–4"){
+  tag = parseInt(
+    document.getElementById("tag14").value
+  );
+}
+
+  if(gruppe === "4–6"){
+    tag = parseInt(
+      document.getElementById("tag45").value
+    );
+  }
+
+  if(gruppe === "6–8"){
+    tag = parseInt(
+      document.getElementById("tag67").value
+    );
+  }
+
+  if(gruppe === "8–12"){
+    tag = parseInt(
+      document.getElementById("tag811").value
+    );
+  }
+
+  const jahr =
+    new Date().getFullYear();
+
+  const termine = [];
+
+  const d =
+    new Date(jahr,0,1);
+
+  while(d.getFullYear() === jahr){
+
+    if(d.getDay() === tag){
+      termine.push(new Date(d));
+    }
+
+    d.setDate(d.getDate() + 1);
+
+  }
+
+  function zeichneKopf(){
+
+    doc.setFontSize(16);
+
+    doc.text(
+      `Anwesenheitsliste ${gruppe} (${jahr})`,
+      10,
+      12
+    );
+
+    const monate = [
+      "Januar",
+      "Februar",
+      "März",
+      "April",
+      "Mai",
+      "Juni",
+      "Juli",
+      "August",
+      "September",
+      "Oktober",
+      "November",
+      "Dezember"
+    ];
+
+    doc.setFontSize(5);
+
+    monate.forEach((name,monat)=>{
+
+      const erster =
+        termine.findIndex(
+          t => t.getMonth() === monat
+        );
+
+      if(erster < 0) return;
+
+      let letzter = erster;
+
+      termine.forEach((t,i)=>{
+
+        if(t.getMonth() === monat){
+          letzter = i;
+        }
+
+      });
+
+      const mitte =
+
+        START_X +
+        (erster * COL_W) +
+        (((letzter - erster + 1) * COL_W) / 2);
+
+      doc.text(
+        name,
+        mitte,
+        27,
+        { align:"center" }
+      );
+
+    });
+
+    //
+    // Sperrspalten
+    //
+    let x = START_X;
+
+    termine.forEach(t=>{
+
+      const grund =
+        grundFuerSperrtermin(t);
+
+      if(grund){
+
+        doc.setFillColor(220);
+
+        doc.rect(
+          x,
+          30,
+          3.3,
+          PAGE_H - 20,
+          "F"
+        );
+
+      }
+
+      x += COL_W;
+
+    });
+
+    //
+    // Linien
+    //
+    x = START_X;
+
+    let letzterMonat =
+      null;
+
+    termine.forEach(t=>{
+
+      doc.setDrawColor(220);
+      doc.setLineWidth(0.1);
+
+      doc.line(
+        x + 3.7,
+        30,
+        x + 3.7,
+        PAGE_H - 20
+      );
+
+      const monat =
+        t.getMonth();
+
+      if(
+
+        letzterMonat !== null &&
+        letzterMonat !== monat
+
+      ){
+
+        doc.setDrawColor(0);
+
+        doc.setLineWidth(0.6);
+
+        doc.line(
+          x - 0.5,
+          30,
+          x - 0.5,
+          PAGE_H - 20
+        );
+
+      }
+
+      letzterMonat =
+        monat;
+
+      x += COL_W;
+
+    });
+
+    //
+    // Datum
+    //
+    x = START_X;
+
+    doc.setFontSize(5);
+
+    termine.forEach(t=>{
+
+      const txt =
+
+        String(t.getDate())
+          .padStart(2,"0")
+
+        +
+
+        "."
+
+        +
+
+        String(t.getMonth()+1)
+          .padStart(2,"0");
+
+      doc.text(
+        txt,
+        x + 1.6,
+        37,
+        {
+          angle:90
+        }
+      );
+
+      x += COL_W;
+
+    });
+
+    //
+    // Sperrgrund
+    //
+    x = START_X;
+
+    doc.setFontSize(6);
+
+    termine.forEach(t=>{
+
+      const grund =
+        grundFuerSperrtermin(t);
+
+      if(grund){
+
+        doc.text(
+          grund,
+          x + 1.6,
+          150,
+          {
+            angle:90
+          }
+        );
+
+      }
+
+      x += COL_W;
+
+    });
+
+  }
+
+  zeichneKopf();
+
+  let y = 50;
+
+  ergebnis
+
+  .filter(k => {
+
+  // Aktuell in dieser Gruppe
+  if(
+  k.AktuelleGruppe.replace("-", "–") === gruppe
+){
+  return true;
+}
+
+
+  // Kommt dieses Jahr neu dazu
+  if(k.NeueGruppe === gruppe){
+
+    const wechsel =
+      dateAusString(k.WechselAm);
+
+    if(
+      wechsel &&
+      wechsel.getFullYear() === jahr
+    ){
+      return true;
+    }
+
+  }
+
+  return false;
+
+})
+
+  .forEach(k=>{
+
+      if(
+        y >
+        PAGE_H - 20
+      ){
+
+        doc.addPage();
+
+        zeichneKopf();
+
+        y = 50;
+      }
+
+      doc.setFontSize(7);
+
+const kommtErstSpaeter =
+
+  k.AktuelleGruppe !== gruppe &&
+  k.NeueGruppe === gruppe;
+
+      if(kommtErstSpaeter){
+
+  doc.setTextColor(170);
+
+}else{
+
+  doc.setTextColor(0);
+
+}
+
+doc.text(
+  `${k.Vorname} ${k.Nachname}`,
+  10,
+  y
+);
+
+
+let hinweisText = "";
+
+if(kommtErstSpaeter){
+
+  hinweisText =
+    `(ab ${k.WechselAm})`;
+
+}
+else if(
+  k.WechselAm &&
+  k.WechselAm !== "—"
+){
+
+  hinweisText =
+    `(bis ${k.WechselAm})`;
+
+}
+
+if(hinweisText){
+
+  doc.setFontSize(6);
+  doc.setTextColor(100);
+
+  doc.text(
+    hinweisText,
+    14,
+    y + 3
   );
 
-  // Wechsel zum nächsten Quartalsanfang danach
-  return nextQuarter(geburtstag);
+  doc.setTextColor(0);
+  doc.setFontSize(7);
+
+}
+
+      const wechselDatumKind =
+        dateAusString(
+          k.WechselAm
+        );
+
+      const eintrittDatumKind =
+  kommtErstSpaeter
+    ? dateAusString(k.WechselAm)
+    : null;
+
+      let x =
+        START_X;
+		
+		doc.setDrawColor(0);
+doc.setLineWidth(0.2);
+
+      termine.forEach(t=>{
+
+        const grund =
+          grundFuerSperrtermin(t);
+
+        if(!grund){
+
+  if(kommtErstSpaeter){
+
+    // Kind kommt erst später
+
+    if(
+      eintrittDatumKind &&
+      t < eintrittDatumKind
+    ){
+
+      doc.setFillColor(220);
+
+      doc.rect(
+        x,
+        y - 2.7,
+        2.5,
+        2.5,
+        "F"
+      );
+
+    }else{
+
+      doc.rect(
+        x,
+        y - 3,
+        3,
+        3
+      );
+
+    }
+
+  }else{
+
+    // Kind ist aktuell in der Gruppe
+
+    if(
+      wechselDatumKind &&
+      t >= wechselDatumKind
+    ){
+
+      doc.setFillColor(220);
+
+      doc.rect(
+        x,
+        y - 2.7,
+        2.5,
+        2.5,
+        "F"
+      );
+
+    }else{
+
+      doc.rect(
+        x,
+        y - 3,
+        3,
+        3
+      );
+
+    }
+
+  }
+
+}
+
+        x += COL_W;
+
+      });
+
+      zeichneHorizontaleLinie(
+        doc,
+        y + 4,
+        PAGE_W - 5
+      );
+
+      y += 10;
+
+    });
+
+  //
+  // Seitennummern
+  //
+  const seiten =
+    doc.getNumberOfPages();
+
+  for(
+    let i = 1;
+    i <= seiten;
+    i++
+  ){
+
+    doc.setPage(i);
+
+    doc.setFontSize(8);
+
+    doc.text(
+      `Seite ${i}/${seiten}`,
+      PAGE_W - 25,
+      PAGE_H - 5
+    );
+
+  }
+
+  doc.save(
+    `Kinderstunde_${gruppe}_${jahr}.pdf`
+  );
+
+}
+
+function wechselDatum(dob, aktuelleGruppe){
+
+  const gruppe =
+    gruppen.find(
+      g => g.name === aktuelleGruppe
+    );
+
+  if(!gruppe){
+    return null;
+  }
+
+  const geburtstag =
+    new Date(
+      dob.getFullYear() + gruppe.wechselAlter,
+      dob.getMonth(),
+      dob.getDate()
+    );
+
+  return nextQuarter(
+    geburtstag
+  );
+
 }
 
 
@@ -777,134 +1685,154 @@ function istNaechstesQuartal(wechsel) {
   return wechsel.getTime() === naechstes.getTime();
 }
 
-function createPDF(gruppe){
+function termineFuerGruppe(gruppe){
 
-  closePDFModal();
+  let tag = 0;
+  
+  if(gruppe === "1–4"){
+  tag =
+    parseInt(
+      document.getElementById("tag14").value
+    );
+}
 
-  const { jsPDF } = window.jspdf;
+  if(gruppe === "4–6"){
+    tag =
+      parseInt(
+        document.getElementById("tag45").value
+      );
+  }
 
-  const doc = new jsPDF();
+  if(gruppe === "6–8"){
+    tag =
+      parseInt(
+        document.getElementById("tag67").value
+      );
+  }
 
-  let y = 20;
+  if(gruppe === "8–12"){
+    tag =
+      parseInt(
+        document.getElementById("tag811").value
+      );
+  }
 
-  doc.setFontSize(18);
+  const heute = new Date();
 
-  doc.text(
-    "Kinderstunde " + gruppe,
-    10,
-    y
-  );
-
-  y += 15;
-
-  doc.setFontSize(12);
-
-  doc.text(
-    "Aktuelle Kinder:",
-    10,
-    y
-  );
-
-  y += 10;
-
-  const aktuellesJahr =
-  new Date().getFullYear();
-
-ergebnis
-  .filter(
-    k => k.AktuelleGruppe === gruppe
-  )
-  .forEach(k => {
-
-    doc.text(
-      k.Vorname + " " + k.Nachname,
-      15,
-      y
+  const ende =
+    new Date(
+      heute.getFullYear(),
+      11,
+      31
     );
 
-    y += 6;
+  const termine = [];
 
-    if(
-      k.WechselAm !== "—" &&
-      k.WechselAm.endsWith(
-        String(aktuellesJahr)
-      )
-    ){
+  const d = new Date(heute);
 
-      doc.text(
-        "Geht am: " +
-        k.WechselAm,
-        20,
-        y
-      );
+  while(d <= ende){
 
-    }else{
+    if(d.getDay() === tag){
 
-      doc.text(
-        "Bleibt in der Gruppe",
-        20,
-        y
+      termine.push(
+        new Date(d)
       );
 
     }
 
-    y += 10;
-
-  });
-  
-  y += 10;
-
-doc.text(
-  "Kommt noch dieses Jahr:",
-  10,
-  y
-);
-
-y += 10;
-
-
-ergebnis
-  .filter(k => {
-
-    if(k.NeueGruppe !== gruppe)
-      return false;
-
-    if(k.WechselAm === "—")
-      return false;
-
-    return k.WechselAm.endsWith(
-      String(aktuellesJahr)
+    d.setDate(
+      d.getDate() + 1
     );
 
-  })
-  .forEach(k => {
+  }
 
-    doc.text(
-      k.Vorname +
-      " " +
-      k.Nachname,
-      15,
-      y
-    );
+  return termine;
 
-    y += 6;
+}
 
-    doc.text(
-      "Kommt am: " +
-      k.WechselAm,
-      20,
-      y
-    );
+function zeichneHorizontaleLinie(doc, y, breite){
 
-    y += 10;
+  doc.setDrawColor(220);
 
-  });
+  doc.line(
+    5,
+    y,
+    breite,
+    y
+  );
 
-  doc.save(
-    "Kinderstunde_" + gruppe + ".pdf"
+  doc.setDrawColor(0);
+
+}
+
+function dateAusString(str){
+
+  if(!str || str === "—")
+    return null;
+
+  const [t,m,j] =
+    str.split(".");
+
+  return new Date(
+    parseInt(j),
+    parseInt(m) - 1,
+    parseInt(t)
   );
 
 }
+
+function berechneEintrittsdatum(
+  dob,
+  gruppeName
+){
+
+  const index =
+    gruppen.findIndex(
+      g => g.name === gruppeName
+    );
+
+  if(index <= 0){
+    return null;
+  }
+
+  const vorherigeGruppe =
+    gruppen[index - 1];
+
+  const geburtstag =
+    new Date(
+      dob.getFullYear() + vorherigeGruppe.wechselAlter,
+      dob.getMonth(),
+      dob.getDate()
+    );
+
+  return nextQuarter(
+    geburtstag
+  );
+
+}
+
+
+
+
+
+function showInfoModal(title, text){
+
+  document.getElementById("infoTitle").innerText =
+    title;
+
+  document.getElementById("infoText").innerText =
+    text;
+
+  document.getElementById("infoModal").style.display =
+    "flex";
+}
+
+function closeInfoModal(){
+
+  document.getElementById("infoModal").style.display =
+    "none";
+}
+
 
 function exportExcel() {
   const ws = XLSX.utils.json_to_sheet(ergebnis);
@@ -912,7 +1840,68 @@ function exportExcel() {
   XLSX.utils.book_append_sheet(wb, ws, "Wechsel");
   XLSX.writeFile(wb, "Kinder_Quartalswechsel.xlsx");
 }
+
+window.onload = function() {
+
+  // Dateifelder leeren
+  document.getElementById("g14").value = "";
+  document.getElementById("g45").value = "";
+  document.getElementById("g67").value = "";
+  document.getElementById("g811").value = "";
+
+  // Anzeigen zurücksetzen
+  document.getElementById("g14Name").querySelector("span").innerText =
+  "Keine Datei ausgewählt";
+  
+  document.getElementById("g45Name").querySelector("span").innerText =
+    "Keine Datei ausgewählt";
+
+  document.getElementById("g67Name").querySelector("span").innerText =
+    "Keine Datei ausgewählt";
+
+  document.getElementById("g811Name").querySelector("span").innerText =
+    "Keine Datei ausgewählt";
+
+  // Entfernen-Buttons ausblenden
+  document.getElementById("g14Remove").style.display = "none";
+  document.getElementById("g45Remove").style.display = "none";
+  document.getElementById("g67Remove").style.display = "none";
+  document.getElementById("g811Remove").style.display = "none";
+
+  // Tabelle leeren
+  document.querySelector("#result tbody").innerHTML = "";
+
+  // Variablen leeren
+  ergebnis = [];
+
+  // Statistik zurücksetzen
+  document.getElementById("gesamtWechsel").innerText = "0";
+  document.getElementById("naechstesQuartal").innerText = "0";
+  document.getElementById("jungschar").innerText = "0";
+
+};
+
 </script>
 </div>
+
+<div class="modal" id="infoModal">
+
+  <div class="modal-content">
+
+    <h3 id="infoTitle"></h3>
+
+    <p id="infoText"></p>
+
+    <button onclick="closeInfoModal()">
+      OK
+    </button>
+
+  </div>
+
+</div>
+
+
+
+
 </body>
 </html>
