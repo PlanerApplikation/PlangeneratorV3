@@ -225,10 +225,8 @@ td,th{
   <div class="modal-content">
 
     <h3>PDF erstellen</h3>
-
-    <p>Für welche Gruppe?</p>
 	
-	<p>Titel:</p>
+	<p>Benenne deine Liste</p>
 
 <input
   type="text"
@@ -241,7 +239,7 @@ td,th{
     box-sizing:border-box;
   ">
 
-    <p>Gruppe:</p>
+    <p>Für welche Gruppe willst du den Plan erstellen?</p>
 
 <select id="pdfGruppe" style="width:100%;margin-bottom:10px;">
 <option value="1–4">1–4 Jahre</option>
@@ -250,26 +248,19 @@ td,th{
   <option value="8–12">8–12 Jahre</option>
 </select>
 
-<p>Format:</p>
+<p>Wann hat die Gruppe ihre Termine?</p>
 
-<label>
-  <input
-    type="radio"
-    name="pdfFormat"
-    value="portrait"
-    checked>
-  Hochformat
-</label>
+<select id="pdfTag" style="width:100%;margin-bottom:10px;">
+  <option value="0">Sonntag</option>
+  <option value="1">Montag</option>
+  <option value="2">Dienstag</option>
+  <option value="3">Mittwoch</option>
+  <option value="4">Donnerstag</option>
+  <option value="5">Freitag</option>
+  <option value="6">Samstag</option>
+</select>
 
-<br>
 
-<label>
-  <input
-    type="radio"
-    name="pdfFormat"
-    value="landscape">
-  Querformat
-</label>
 
 <button onclick="pdfErstellen()">
   PDF erstellen
@@ -531,56 +522,7 @@ td,th{
 
 </table>
 
-<div>
-  <label><strong>1-4 Jahre</strong></label><br>
-  <select id="tag14">
-    <option value="0">Sonntag</option>
-    <option value="1">Montag</option>
-    <option value="2">Dienstag</option>
-    <option value="3">Mittwoch</option>
-    <option value="4">Donnerstag</option>
-    <option value="5">Freitag</option>
-    <option value="6">Samstag</option>
-  </select>
-</div>
-  <div>
-    <label><strong>4-6 Jahre</strong></label><br>
-    <select id="tag45">
-      <option value="0">Sonntag</option>
-      <option value="1">Montag</option>
-      <option value="2">Dienstag</option>
-      <option value="3">Mittwoch</option>
-      <option value="4">Donnerstag</option>
-      <option value="5">Freitag</option>
-      <option value="6">Samstag</option>
-    </select>
-  </div>
 
-  <div>
-    <label><strong>6-8 Jahre</strong></label><br>
-    <select id="tag67">
-      <option value="0">Sonntag</option>
-      <option value="1">Montag</option>
-      <option value="2">Dienstag</option>
-      <option value="3">Mittwoch</option>
-      <option value="4">Donnerstag</option>
-      <option value="5">Freitag</option>
-      <option value="6">Samstag</option>
-    </select>
-  </div>
-
-  <div>
-    <label><strong>8-12 Jahre</strong></label><br>
-    <select id="tag811">
-      <option value="0">Sonntag</option>
-      <option value="1">Montag</option>
-      <option value="2">Dienstag</option>
-      <option value="3">Mittwoch</option>
-      <option value="4">Donnerstag</option>
-      <option value="5">Freitag</option>
-      <option value="6">Samstag</option>
-    </select>
-  </div>
 
 </div>
 
@@ -697,14 +639,9 @@ function pdfErstellen(){
   }
 
   const gruppe =
-    document.getElementById("pdfGruppe").value;
+  document.getElementById("pdfGruppe").value;
 
-  const format =
-    document.querySelector(
-      'input[name="pdfFormat"]:checked'
-    ).value;
-
-  createPDF(gruppe, format);
+createPDF(gruppe);
 }
 
 
@@ -1142,12 +1079,15 @@ document.getElementById("jungschar").innerText =
 
 }
 
-function createPDF(gruppe, format){
+function createPDF(gruppe){
 
   closePDFModal();
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF(format);
+
+const doc = new jsPDF({
+  orientation: "landscape"
+});
 
   const PAGE_W =
     doc.internal.pageSize.getWidth();
@@ -1158,32 +1098,10 @@ function createPDF(gruppe, format){
   const START_X = 47;
   const COL_W = 4.2;
 
-  let tag = 0;
+  const tag = parseInt(
+  document.getElementById("pdfTag").value
+);
 
-
-if(gruppe === "1–4"){
-  tag = parseInt(
-    document.getElementById("tag14").value
-  );
-}
-
-  if(gruppe === "4–6"){
-    tag = parseInt(
-      document.getElementById("tag45").value
-    );
-  }
-
-  if(gruppe === "6–8"){
-    tag = parseInt(
-      document.getElementById("tag67").value
-    );
-  }
-
-  if(gruppe === "8–12"){
-    tag = parseInt(
-      document.getElementById("tag811").value
-    );
-  }
 
   const jahr =
     new Date().getFullYear();
@@ -1232,7 +1150,7 @@ doc.text(
       "Dezember"
     ];
 
-    doc.setFontSize(5);
+    doc.setFontSize(7);
 
     monate.forEach((name,monat)=>{
 
@@ -1351,7 +1269,7 @@ doc.text(
     //
     x = START_X;
 
-    doc.setFontSize(5);
+    doc.setFontSize(6);
 
     termine.forEach(t=>{
 
@@ -1462,7 +1380,7 @@ doc.text(
         y = 50;
       }
 
-      doc.setFontSize(7);
+      doc.setFontSize(8);
 
 const kommtErstSpaeter =
 
@@ -1471,7 +1389,7 @@ const kommtErstSpaeter =
 
       if(kommtErstSpaeter){
 
-  doc.setTextColor(170);
+  doc.setTextColor(0);
 
 }else{
 
@@ -1516,7 +1434,7 @@ if(hinweisText){
   );
 
   doc.setTextColor(0);
-  doc.setFontSize(7);
+  doc.setFontSize(8);
 
 }
 
@@ -1645,9 +1563,15 @@ doc.setLineWidth(0.2);
 
   }
 
-  doc.save(
-    `Kinderstunde_${gruppe}_${jahr}.pdf`
-  );
+  const pdfBlob = doc.output("blob");
+
+const pdfUrl = URL.createObjectURL(pdfBlob);
+
+window.open(
+  pdfUrl,
+  "_blank"
+);
+
 
 }
 
