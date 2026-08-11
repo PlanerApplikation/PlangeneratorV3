@@ -108,7 +108,7 @@ td, th {
   color:black;
 }
 
-.modal .delete {
+.modal button.delete {
   background:#e74c3c;
 }
 
@@ -1104,7 +1104,10 @@ function openEditModal(i){
 });
 
   renderEditList();
-  renderEditSelect();
+
+renderEditRoleSelect();
+
+renderEditSelect();
 
   document.getElementById("editModal").classList.remove("hidden");
 }
@@ -1112,6 +1115,30 @@ function openEditModal(i){
 function closeEditModal(){
   document.getElementById("editModal").classList.add("hidden");
 }
+
+
+
+function renderEditRoleSelect(){
+
+  const roleSelect =
+    document.getElementById("editRoleSelect");
+
+  roleSelect.innerHTML = "";
+
+  roles.forEach(role => {
+
+    roleSelect.innerHTML += `
+      <option value="${role.name}">
+        ${role.name}
+      </option>
+    `;
+
+  });
+
+}
+
+
+
 
 function renderEditList(){
   const div = document.getElementById("editPeopleList");
@@ -1123,49 +1150,102 @@ function renderEditList(){
   div.innerHTML += `
     <div class="role-item">
       <span>${p.name}${p.role ? " (" + p.role + ")" : ""}</span>
-      <span class="icon-btn delete" onclick="removePersonFromSlot(${idx})">✖</span>
+      <span class="icon-btn delete" onclick="removePersonFromSlot(${idx})">🗑️</span>
     </div>
   `;
 });
 }
 
 function renderEditSelect(){
-  const select = document.getElementById("editSelect");
+
+  const select =
+    document.getElementById("editSelect");
+
   select.innerHTML = "";
 
-  current.people.forEach(p => {
-    select.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+  const selectedRole =
+    document.getElementById(
+      "editRoleSelect"
+    ).value;
+
+  const entry =
+    current.result[editIndex];
+
+  current.people.forEach(person => {
+
+    const personRoles =
+      (person.role || "")
+        .split(",")
+        .map(r => r.trim());
+
+    const alreadyAssigned =
+      entry.people.some(
+        p => p.name === person.name
+      );
+
+    if(
+      personRoles.includes(selectedRole) &&
+      !alreadyAssigned
+    ){
+
+      select.innerHTML += `
+        <option value="${person.name}">
+          ${person.name}
+        </option>
+      `;
+
+    }
+
   });
+
 }
 
 function addPersonToSlot(){
-  const name = document.getElementById("editSelect").value;
-  const entry = current.result[editIndex];
 
-  const alreadyExists = entry.people.some(p => p.name === name);
+  const name =
+    document.getElementById(
+      "editSelect"
+    ).value;
+
+  const entry =
+    current.result[editIndex];
+
+  const alreadyExists =
+    entry.people.some(
+      p => p.name === name
+    );
+
   if(alreadyExists) return;
 
-  const person = current.people.find(p => p.name === name);
-
-  let role = "";
-
-  if(person?.role){
-    const roles = person.role
-      .split(",")
-      .map(r => r.trim())
-      .filter(r => r);
-
-    role = roles[Math.floor(Math.random() * roles.length)];
-  }
+  const role =
+    document.getElementById(
+      "editRoleSelect"
+    ).value;
 
   entry.people.push({
     name,
     role
   });
 
+  entry.people.sort((a, b) => {
+
+    const roleOrder = {};
+
+    roles.forEach((role, index) => {
+      roleOrder[role.name] = index;
+    });
+
+    return (
+      (roleOrder[a.role] ?? 999) -
+      (roleOrder[b.role] ?? 999)
+    );
+
+  });
+
   renderEditList();
   regenerateTable();
   save();
+
 }
 
 function toggleStats(){
@@ -1847,6 +1927,7 @@ function removePersonFromSlot(idx){
 
   renderEditList();
   regenerateTable();
+  save();
 }
 
 let roles = [];
@@ -4963,9 +5044,22 @@ document.addEventListener("DOMContentLoaded", () => {
     <div id="editPeopleList"></div>
 
     <div style="margin-top:15px;">
-      <select id="editSelect"></select>
-      <button onclick="addPersonToSlot()">+ Hinzufügen</button>
-    </div>
+
+  <label>Rolle</label>
+  <select id="editRoleSelect" onchange="renderEditSelect()"></select>
+
+  <br><br>
+
+  <label>Person</label>
+  <select id="editSelect"></select>
+
+  <br><br>
+
+  <button onclick="addPersonToSlot()">
+    + Hinzufügen
+  </button>
+
+</div>
 
     <div class="modal-actions">
       <button class="cancel" onclick="closeEditModal()">Schließen</button>
