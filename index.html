@@ -665,6 +665,10 @@ td:hover .icon-btn {
       Dashboard
     </button>
 
+<button onclick="openNotesModal()">
+  📝 Notizen
+</button>
+
     <button
       onclick="window.open('kinderstunden.html','_blank')">
       👧 Kinderstundenverwaltung
@@ -1082,6 +1086,12 @@ Themen
 
 let plans = JSON.parse(localStorage.getItem("plans")||"[]");
 let current = null;
+let notesData =
+  JSON.parse(
+    localStorage.getItem("globalNotes")
+    || '{"text":"","lastEdited":null}'
+  );
+
 
 let tempBlockedDates = [];
 let tempBlockedRanges = [];
@@ -3614,11 +3624,12 @@ function exportConfig(){
   // Falls gerade ein Plan geöffnet ist, vorher alles speichern
   save();
 
-  const data = {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    plans: plans
-  };
+const data = {
+  version: 1,
+  exportedAt: new Date().toISOString(),
+  plans: plans,
+  globalNotes: notesData
+};
 
   const json = JSON.stringify(data, null, 2);
 
@@ -3693,6 +3704,17 @@ function importConfig(event){
     current = null;
     roles = [];
     rules = [];
+
+
+if(importedData.globalNotes){
+  notesData = importedData.globalNotes;
+
+  localStorage.setItem(
+    "globalNotes",
+    JSON.stringify(notesData)
+  );
+}
+
 
     localStorage.setItem("plans", JSON.stringify(plans));
 
@@ -4795,6 +4817,94 @@ function removeTempPersonRole(index){
   renderTempPersonRoles();
 }
 
+function openNotesModal(){
+
+  document.getElementById("notesText").value =
+    notesData.text || "";
+
+  updateNotesTimestamp();
+
+  const textArea =
+  document.getElementById("notesText");
+
+textArea.readOnly = true;
+textArea.style.background = "#f1f5f9";
+textArea.style.cursor = "default";
+
+
+  document
+    .getElementById("notesModal")
+    .classList.remove("hidden");
+}
+
+function closeNotesModal(){
+
+  document
+    .getElementById("notesModal")
+    .classList.add("hidden");
+}
+
+function enableNotesEdit(){
+
+  const textArea =
+    document.getElementById("notesText");
+
+  textArea.readOnly = false;
+
+  textArea.style.background = "white";
+  textArea.style.cursor = "text";
+
+  textArea.focus();
+}
+
+function saveNotes(){
+
+  notesData.text =
+    document.getElementById("notesText").value;
+
+  notesData.lastEdited =
+    new Date().toISOString();
+
+  localStorage.setItem(
+    "globalNotes",
+    JSON.stringify(notesData)
+  );
+
+  updateNotesTimestamp();
+
+  document
+  .getElementById("notesText")
+  .readOnly = true;
+
+document
+  .getElementById("notesText")
+  .style.background = "#f1f5f9";
+
+  showNiceAlert(
+    "Gespeichert",
+    "Die Notizen wurden gespeichert."
+  );
+}
+
+function updateNotesTimestamp(){
+
+  const label =
+    document.getElementById("notesLastEdited");
+
+  if(!notesData.lastEdited){
+
+    label.innerText =
+      "Noch keine Notizen gespeichert";
+
+    return;
+  }
+
+  label.innerText =
+    "Letzte Änderung: " +
+    new Date(notesData.lastEdited)
+      .toLocaleString("de-DE");
+}
+
 
 document.addEventListener("DOMContentLoaded", () => {
   const inputsToSave = ["start", "end"];
@@ -5399,6 +5509,62 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </div>
 
+
+<div id="notesModal" class="modal hidden">
+
+  <div class="modal-box"
+       style="
+         width:750px;
+         text-align:left;
+       ">
+
+    <h3>📝 Notizen</h3>
+
+    <p id="notesLastEdited"
+       style="
+         font-size:13px;
+         color:#64748b;
+         margin-bottom:10px;
+       ">
+    </p>
+
+    <textarea
+      id="notesText"
+      readonly
+      style="
+        width:100%;
+        height:350px;
+        resize:vertical;
+        padding:12px;
+        border:1px solid #d1d5db;
+        border-radius:10px;
+        font-family:inherit;
+      ">
+    </textarea>
+
+    <div class="modal-actions">
+
+      <button
+        class="cancel"
+        onclick="closeNotesModal()">
+        Schließen
+      </button>
+
+      <button
+        onclick="enableNotesEdit()">
+        ✏️ Bearbeiten
+      </button>
+
+      <button
+        onclick="saveNotes()">
+        💾 Speichern
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 
 </body>
 </html>
