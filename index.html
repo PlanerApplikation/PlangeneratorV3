@@ -3192,6 +3192,9 @@ team.forEach(person => {
 
 });
 
+usageScore =
+  usageScore / team.length;
+
 const finalScore =
   roleScore * 1000
   - (usageScore * 25);
@@ -4642,7 +4645,7 @@ let niceConfirmCallback = null;
 
 function showNiceAlert(title, message){
   document.getElementById("niceAlertTitle").innerText = title;
-  document.getElementById("niceAlertText").innerText = message;
+  document.getElementById("niceAlertText").textContent = message;
   document.getElementById("niceAlertModal").classList.remove("hidden");
 }
 
@@ -5169,14 +5172,34 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- SCHÖNES HINWEIS MODAL -->
 <!-- SCHÖNES HINWEIS MODAL -->
 <div id="niceAlertModal" class="modal hidden">
-  <div class="modal-box" style="width:420px;">
+  <div
+    class="modal-box"
+    style="
+      width:600px;
+      max-height:80vh;
+      display:flex;
+      flex-direction:column;
+    "
+  >
+
     <h3 id="niceAlertTitle">Hinweis</h3>
 
-    <p id="niceAlertText" style="white-space:pre-line;"></p>
+    <div
+      id="niceAlertText"
+      style="
+        white-space:pre-line;
+        overflow-y:auto;
+        flex:1;
+        max-height:55vh;
+        text-align:left;
+        padding-right:10px;
+      "
+    ></div>
 
     <div class="modal-actions">
       <button onclick="closeNiceAlert()">OK</button>
     </div>
+
   </div>
 </div>
 
