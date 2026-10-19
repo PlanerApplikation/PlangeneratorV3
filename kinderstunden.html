@@ -1397,11 +1397,25 @@ const kommtErstSpaeter =
 
 }
 
+doc.setFontSize(7);
+
+doc.text(
+  `(${k.Geburtsdatum})`,
+  10,
+  y - 3
+);
+
+doc.setFont("helvetica", "bold");
+
+doc.setFontSize(9);
+
 doc.text(
   `${k.Vorname} ${k.Nachname}`,
   10,
   y
 );
+
+doc.setFont("helvetica", "normal");
 
 
 let hinweisText = "";
@@ -1424,8 +1438,7 @@ else if(
 
 if(hinweisText){
 
-  doc.setFontSize(6);
-  doc.setTextColor(100);
+  doc.setFontSize(7);
 
   doc.text(
     hinweisText,
@@ -1450,6 +1463,9 @@ if(hinweisText){
 
       let x =
         START_X;
+		
+		let letzterTermin = null;
+const dobKind = dateAusString(k.Geburtsdatum);
 		
 		doc.setDrawColor(0);
 doc.setLineWidth(0.2);
@@ -1482,12 +1498,36 @@ doc.setLineWidth(0.2);
 
     }else{
 
-      doc.rect(
-        x,
-        y - 3,
-        3,
-        3
-      );
+      const geburtstagSeitdem =
+  hatteGeburtstagSeitLetztemTermin(
+    dobKind,
+    letzterTermin,
+    t
+  );
+
+if(geburtstagSeitdem){
+
+  doc.setLineWidth(0.5);
+
+  doc.circle(
+    x + 1.5,
+    y - 1.5,
+    1.5
+  );
+
+  doc.setLineWidth(0.2);
+
+
+}else{
+
+  doc.rect(
+    x,
+    y - 3,
+    3,
+    3
+  );
+
+}
 
     }
 
@@ -1512,12 +1552,36 @@ doc.setLineWidth(0.2);
 
     }else{
 
-      doc.rect(
-        x,
-        y - 3,
-        3,
-        3
-      );
+      const geburtstagSeitdem =
+  hatteGeburtstagSeitLetztemTermin(
+    dobKind,
+    letzterTermin,
+    t
+  );
+
+if(geburtstagSeitdem){
+
+  doc.setLineWidth(0.5);
+
+  doc.circle(
+    x + 1.5,
+    y - 1.5,
+    1.5
+  );
+
+  doc.setLineWidth(0.2);
+
+
+}else{
+
+  doc.rect(
+    x,
+    y - 3,
+    3,
+    3
+  );
+
+}
 
     }
 
@@ -1526,6 +1590,10 @@ doc.setLineWidth(0.2);
 }
 
         x += COL_W;
+
+if(!grund){
+  letzterTermin = t;
+}
 
       });
 
@@ -1721,6 +1789,25 @@ function dateAusString(str){
   );
 
 }
+
+function hatteGeburtstagSeitLetztemTermin(dob, letzterTermin, aktuellerTermin){
+
+  if(!dob || !letzterTermin){
+    return false;
+  }
+
+  const geburtstag = new Date(
+    aktuellerTermin.getFullYear(),
+    dob.getMonth(),
+    dob.getDate()
+  );
+
+  return (
+    geburtstag > letzterTermin &&
+    geburtstag <= aktuellerTermin
+  );
+}
+
 
 function berechneEintrittsdatum(
   dob,
