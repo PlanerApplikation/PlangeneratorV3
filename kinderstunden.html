@@ -1462,104 +1462,61 @@ if(hinweisText){
     : null;
 
       let x =
-        START_X;
-		
-		let letzterTermin = null;
-const dobKind = dateAusString(k.Geburtsdatum);
-		
-		doc.setDrawColor(0);
+  START_X;
+
+let letzterTermin = null;
+
+const dobKind =
+  dateAusString(
+    k.Geburtsdatum
+  );
+
+doc.setDrawColor(0);
 doc.setLineWidth(0.2);
 
-      termine.forEach(t=>{
+let gratulationsTermin = null;
 
-        const grund =
-          grundFuerSperrtermin(t);
+if (dobKind) {
 
-        if(!grund){
-
-  if(kommtErstSpaeter){
-
-    // Kind kommt erst später
-
-    if(
-      eintrittDatumKind &&
-      t < eintrittDatumKind
-    ){
-
-      doc.setFillColor(220);
-
-      doc.rect(
-        x,
-        y - 2.7,
-        2.5,
-        2.5,
-        "F"
-      );
-
-    }else{
-
-      const geburtstagSeitdem =
-  hatteGeburtstagSeitLetztemTermin(
-    dobKind,
-    letzterTermin,
-    t
+  let startDatum = new Date(
+    jahr,
+    dobKind.getMonth(),
+    dobKind.getDate()
   );
 
-if(geburtstagSeitdem){
+  // Kind kommt erst später in die Gruppe
+  
 
-  doc.setLineWidth(0.5);
+  gratulationsTermin = termine.find(t => {
 
-  doc.circle(
-    x + 1.5,
-    y - 1.5,
-    1.5
-  );
-
-  doc.setLineWidth(0.2);
-
-
-}else{
-
-  doc.rect(
-    x,
-    y - 3,
-    3,
-    3
-  );
-
-}
-
+    if (t < startDatum) {
+      return false;
     }
 
-  }else{
+    // Sperrtermine überspringen
+    if (grundFuerSperrtermin(t)) {
+      return false;
+    }
 
-    // Kind ist aktuell in der Gruppe
+    return true;
 
-    if(
-      wechselDatumKind &&
-      t >= wechselDatumKind
-    ){
+  });
 
-      doc.setFillColor(220);
+}
 
-      doc.rect(
-        x,
-        y - 2.7,
-        2.5,
-        2.5,
-        "F"
-      );
 
-    }else{
+termine.forEach(t => {
 
-      const geburtstagSeitdem =
-  hatteGeburtstagSeitLetztemTermin(
-    dobKind,
-    letzterTermin,
-    t
-  );
+  const grund = grundFuerSperrtermin(t);
 
-if(geburtstagSeitdem){
+  if (!grund) {
+
+    if (kommtErstSpaeter) {
+
+      if (
+  gratulationsTermin &&
+  t.getTime() === gratulationsTermin.getTime()
+) {
 
   doc.setLineWidth(0.5);
 
@@ -1571,31 +1528,105 @@ if(geburtstagSeitdem){
 
   doc.setLineWidth(0.2);
 
+} else if (
+  eintrittDatumKind &&
+  t < eintrittDatumKind
+) {
 
-}else{
+  doc.setFillColor(220);
 
   doc.rect(
     x,
-    y - 3,
-    3,
-    3
+    y - 2.7,
+    2.5,
+    2.5,
+    "F"
   );
 
-}
+} else {
+
+        if (
+  gratulationsTermin &&
+  t.getTime() === gratulationsTermin.getTime()
+) {
+
+          doc.setLineWidth(0.5);
+
+          doc.circle(
+            x + 1.5,
+            y - 1.5,
+            1.5
+          );
+
+          doc.setLineWidth(0.2);
+
+        } else {
+
+          doc.rect(
+            x,
+            y - 3,
+            3,
+            3
+          );
+
+        }
+
+      }
+
+    } else {
+
+      if (
+  gratulationsTermin &&
+  t.getTime() === gratulationsTermin.getTime()
+) {
+
+        doc.setLineWidth(0.5);
+
+        doc.circle(
+          x + 1.5,
+          y - 1.5,
+          1.5
+        );
+
+        doc.setLineWidth(0.2);
+
+      } else if (
+        wechselDatumKind &&
+        t >= wechselDatumKind
+      ) {
+
+        doc.setFillColor(220);
+
+        doc.rect(
+          x,
+          y - 2.7,
+          2.5,
+          2.5,
+          "F"
+        );
+
+      } else {
+
+        doc.rect(
+          x,
+          y - 3,
+          3,
+          3
+        );
+
+      }
 
     }
 
   }
 
-}
+  x += COL_W;
 
-        x += COL_W;
+  if (!grund) {
+    letzterTermin = t;
+  }
 
-if(!grund){
-  letzterTermin = t;
-}
-
-      });
+});
 
       zeichneHorizontaleLinie(
         doc,
